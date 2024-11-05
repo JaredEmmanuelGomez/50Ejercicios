@@ -1,0 +1,26 @@
+# Lenguajes de Interfaz - Actividad 1
+
+### Conversión de Temperatura, Unidades e I/O
+
+**Alumno:** Gómez Aguilar Jared Emmanuel  
+**Número de Control:** 22210309  
+
+Conversión de temperatura de Celsius a Fahrenheit
+Conversión de diferentes unidades
+Manejo de entrada y salida (I/O)
+Tecnologías utilizadas
+
+/*
+# python programa 
+# Programa para convertir temperatura de Celsius a Fahrenheit
+
+# Solicita al usuario la temperatura en Celsius
+try:
+    celsius = float(input("Ingrese la temperatura en Celsius: "))
+    fahrenheit = (celsius * 9 / 5) + 32
+    print(f"La temperatura en Fahrenheit es: {fahrenheit:.2f}°F")
+except ValueError:
+    print("Por favor, ingrese un valor numérico válido.")
+*/
+
+

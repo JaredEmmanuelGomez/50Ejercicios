@@ -1,1 +1,22 @@
+# Lenguajes de Interfaz - Actividad 3
+### Resta de dos números, Aritmética básica
 
+**Alumno:** Gómez Aguilar Jared Emmanuel  
+**Número de Control:** 22210309  
+
+/*
+# Programa para restar dos números en Python
+# Solicita al usuario los dos números
+try:
+    num1 = float(input("Ingrese el primer número: "))
+    num2 = float(input("Ingrese el segundo número: "))
+    
+    # Calcula la resta
+    resta = num1 - num2
+    
+    # Muestra el resultado
+    print(f"La resta de {num1} menos {num2} es: {resta}")
+except ValueError:
+    print("Por favor, ingrese valores numéricos válidos.")
+
+*/

@@ -1,0 +1,17 @@
+/*
+# Función para dividir dos números
+def dividir_numeros(num1, num2):
+    try:
+        resultado = num1 / num2
+        return resultado
+    except ZeroDivisionError:
+        return "Error: No se puede dividir por cero."
+
+# Solicitar los números al usuario
+numero1 = float(input("Introduce el primer número: "))
+numero2 = float(input("Introduce el segundo número: "))
+
+# Llamar a la función y mostrar el resultado
+resultado = dividir_numeros(numero1, numero2)
+print("El resultado de la división es:", resultado)
+*/

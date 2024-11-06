@@ -24,7 +24,8 @@ except ValueError:
 */
 
 
-
+//Gómez Aguilar Jared Emmanuel
+//22210309
 .data
 prompt1:    .string "Ingrese la temperatura en Celsius: "
 format_in:  .string "%lf"

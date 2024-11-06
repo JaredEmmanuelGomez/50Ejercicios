@@ -5,6 +5,8 @@
 **Número de Control:** 22210309  
 
 /*
+# Gómez Aguilar Jared Emmanuel 
+# 22210309
 # Programa para restar dos números en Python
 # Solicita al usuario los dos números
 try:
@@ -22,7 +24,8 @@ except ValueError:
 */
 
 
-
+//Gómez Aguilar Jared Emmanuel
+//22210309
 .data
 prompt1:    .string "Ingrese el primer número: "
 prompt2:    .string "Ingrese el segundo número: "
@@ -72,3 +75,7 @@ main:
         ret
 
         .size main, (. - main)
+
+
+ASCIINEMA
+https://asciinema.org/a/687660

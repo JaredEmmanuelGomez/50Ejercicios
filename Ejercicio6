@@ -1,0 +1,16 @@
+
+/*
+# Función para convertir un carácter a su valor ASCII
+def ascii_a_entero(caracter):
+    if len(caracter) == 1:  # Asegurarse de que sea un solo carácter
+        return ord(caracter)
+    else:
+        return "Error: Debes ingresar solo un carácter."
+
+# Solicitar un carácter al usuario
+caracter = input("Introduce un carácter: ")
+
+# Llamar a la función y mostrar el valor ASCII
+resultado = ascii_a_entero(caracter)
+print("El valor ASCII del carácter es:", resultado)
+*/

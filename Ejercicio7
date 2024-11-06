@@ -1,0 +1,17 @@
+# Función para convertir un número entero a su carácter ASCII
+def entero_a_ascii(numero):
+    try:
+        # Verificar si el número está en el rango válido de caracteres ASCII (0-127)
+        if 0 <= numero <= 127:
+            return chr(numero)
+        else:
+            return "Error: El número debe estar en el rango de 0 a 127."
+    except TypeError:
+        return "Error: Debes ingresar un valor numérico."
+
+# Solicitar un número entero al usuario
+numero = int(input("Introduce un número entero: "))
+
+# Llamar a la función y mostrar el resultado
+resultado = entero_a_ascii(numero)
+print("El carácter ASCII correspondiente es:", resultado)

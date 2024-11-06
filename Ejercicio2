@@ -5,6 +5,7 @@
 **Número de Control:** 22210309  
 
 /*
+# Gómez Aguilar Jared Emmanuel
 # Python Programa
 # Programa para sumar dos números en Python
 
@@ -79,4 +80,5 @@ main:
         .size main, (. - main)
 
 
-
+ASCIINEMA
+https://asciinema.org/a/687654

@@ -25,6 +25,8 @@ except ValueError:
 
 
 
+//Gómez Aguilar Jared Emmanuel
+//22210309
 
 .data
 prompt1:    .string "Ingrese el primer número: "
@@ -75,3 +77,6 @@ main:
         ret
 
         .size main, (. - main)
+
+
+

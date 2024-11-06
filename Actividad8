@@ -1,0 +1,12 @@
+# Función para calcular la longitud de una cadena
+def calcular_longitud(cadena):
+    return len(cadena)
+
+# Solicitar una cadena al usuario
+cadena = input("Introduce una cadena de texto: ")
+
+# Calcular la longitud de la cadena
+longitud = calcular_longitud(cadena)
+
+# Mostrar el resultado
+print("La longitud de la cadena es:", longitud)

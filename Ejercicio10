@@ -1,0 +1,19 @@
+# Función para verificar si un número es primo
+def es_primo(numero):
+    if numero <= 1:
+        return False
+    if numero == 2:
+        return True  # El 2 es primo
+    for i in range(2, int(numero ** 0.5) + 1):  # Verificamos hasta la raíz cuadrada del número
+        if numero % i == 0:  # Si es divisible por cualquier número en ese rango, no es primo
+            return False
+    return True  # Si no encontramos divisores, es primo
+
+# Solicitar un número al usuario
+numero = int(input("Introduce un número: "))
+
+# Verificar si es primo
+if es_primo(numero):
+    print(f"{numero} es un número primo.")
+else:
+    print(f"{numero} no es un número primo.")

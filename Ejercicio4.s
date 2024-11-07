@@ -1,8 +1,9 @@
 # Lenguajes de Interfaz - Actividad 4
-### Multiplicación de dos números, Aritmética básica (MUL)
+# Multiplicación de dos números, Aritmética básica (MUL)
+# Alumno: Gómez Aguilar Jared Emmanuel  
+# Número de Control: 22210309  
+# Python y Ensamblador
 
-**Alumno:** Gómez Aguilar Jared Emmanuel  
-**Número de Control:** 22210309 
 
 /*
 # Programa para multiplicar dos números en Python

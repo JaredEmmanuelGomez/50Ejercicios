@@ -19,3 +19,44 @@ caracter = input("Introduce un carácter: ")
 resultado = ascii_a_entero(caracter)
 print("El valor ASCII del carácter es:", resultado)
 */
+
+
+
+//Gómez Aguilar Jared Emmanuel
+//22210309
+.data
+prompt:     .string "Introduce un carácter: "
+format_in:  .string "%c"
+format_out: .string "El valor ASCII del carácter es: %d\n"
+err_msg:    .string "Error: Debes ingresar solo un carácter.\n"
+
+        .text
+        .global main
+        .type main, %function
+
+main:
+        stp     x29, x30, [sp, -16]!    // Guardar frame pointer y link register
+        mov     x29, sp                  // Set up frame pointer
+
+        // Imprimir prompt
+        adr     x0, prompt
+        bl      printf
+
+        // Leer carácter
+        sub     sp, sp, #4              // Espacio para el carácter
+        mov     x1, sp                  // Dirección donde guardar input
+        adr     x0, format_in
+        bl      scanf
+
+        // Cargar carácter y convertir a valor ASCII
+        ldrb    w1, [sp]                // Cargar el carácter en w1
+
+        // Imprimir resultado
+        adr     x0, format_out
+        bl      printf
+
+        mov     w0, #0                  // Return 0
+        ldp     x29, x30, [sp], #16     // Restaurar frame pointer y link register
+        ret
+
+        .size main, (. - main)

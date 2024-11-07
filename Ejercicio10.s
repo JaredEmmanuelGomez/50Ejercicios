@@ -1,3 +1,10 @@
+# Lenguajes de Interfaz - Actividad 10
+# Verificar si un número es primo
+# Alumno: Gómez Aguilar Jared Emmanuel  
+# Número de Control: 22210309  
+# Python y Ensamblador
+
+
 # Función para verificar si un número es primo
 def es_primo(numero):
     if numero <= 1:

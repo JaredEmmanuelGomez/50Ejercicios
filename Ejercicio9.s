@@ -1,3 +1,10 @@
+# Lenguajes de Interfaz - Actividad 9
+# Leer una entrada desde el teclado
+# Alumno: Gómez Aguilar Jared Emmanuel  
+# Número de Control: 22210309  
+# Python y Ensamblador
+
+
 /*
 # Leer una entrada desde el teclado
 entrada = input("Introduce algo: ")

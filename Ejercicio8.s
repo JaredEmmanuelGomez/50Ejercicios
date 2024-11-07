@@ -1,3 +1,4 @@
+/*
 # Función para calcular la longitud de una cadena
 def calcular_longitud(cadena):
     return len(cadena)
@@ -10,7 +11,7 @@ longitud = calcular_longitud(cadena)
 
 # Mostrar el resultado
 print("La longitud de la cadena es:", longitud)
-
+*/
 
 
 

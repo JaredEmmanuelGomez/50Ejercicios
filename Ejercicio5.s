@@ -1,8 +1,9 @@
 # Lenguajes de Interfaz - Actividad 5
-### División de dos números, Aritmética (UDIV, SDIV)
+# División de dos números, Aritmética (UDIV, SDIV)
+# Alumno: Gómez Aguilar Jared Emmanuel  
+# Número de Control: 22210309  
+# Python y Ensamblador
 
-**Alumno:** Gómez Aguilar Jared Emmanuel  
-**Número de Control:** 22210309 
 
 /*
 # Función para dividir dos números

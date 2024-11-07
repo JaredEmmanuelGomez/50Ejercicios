@@ -5,7 +5,6 @@
 # Python y Ensamblador
 
 
-
 /*
 # Función para convertir un número entero a su carácter ASCII
 def entero_a_ascii(numero):

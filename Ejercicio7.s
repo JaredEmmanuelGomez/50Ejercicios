@@ -1,3 +1,11 @@
+# Lenguajes de Interfaz - Actividad 7
+# Conversión de entero a ASCII
+# Alumno: Gómez Aguilar Jared Emmanuel  
+# Número de Control: 22210309  
+# Python y Ensamblador
+
+
+
 /*
 # Función para convertir un número entero a su carácter ASCII
 def entero_a_ascii(numero):

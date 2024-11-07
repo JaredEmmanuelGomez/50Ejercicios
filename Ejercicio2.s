@@ -1,8 +1,9 @@
 # Lenguajes de Interfaz - Actividad 2
-### Suma de dos números, Aritmética básica
+# Suma de dos números, Aritmética básica
+# Alumno: Gómez Aguilar Jared Emmanuel  
+# Número de Control: 22210309  
+# Python y Ensamblador
 
-**Alumno:** Gómez Aguilar Jared Emmanuel  
-**Número de Control:** 22210309  
 
 /*
 # Gómez Aguilar Jared Emmanuel

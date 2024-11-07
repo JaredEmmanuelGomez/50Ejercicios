@@ -1,3 +1,4 @@
+/*
 # Función para convertir un número entero a su carácter ASCII
 def entero_a_ascii(numero):
     try:
@@ -15,7 +16,7 @@ numero = int(input("Introduce un número entero: "))
 # Llamar a la función y mostrar el resultado
 resultado = entero_a_ascii(numero)
 print("El carácter ASCII correspondiente es:", resultado)
-
+*/
 
 
 //Gómez Aguilar Jared Emmanuel

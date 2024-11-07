@@ -1,5 +1,5 @@
 # Lenguajes de Interfaz - Actividad 12
-# Convertir binario a decimal
+# Verificar si una cadena es palíndromo
 # Alumno: Gómez Aguilar Jared Emmanuel  
 # Número de Control: 22210309  
 # Python y Ensamblador

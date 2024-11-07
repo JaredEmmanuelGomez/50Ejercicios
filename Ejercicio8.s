@@ -1,3 +1,10 @@
+# Lenguajes de Interfaz - Actividad 8
+# Calcular la longitud de una cadena
+# Alumno: Gómez Aguilar Jared Emmanuel  
+# Número de Control: 22210309  
+# Python y Ensamblador
+
+
 /*
 # Función para calcular la longitud de una cadena
 def calcular_longitud(cadena):

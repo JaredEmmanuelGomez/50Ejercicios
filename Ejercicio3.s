@@ -1,8 +1,8 @@
 # Lenguajes de Interfaz - Actividad 3
-### Resta de dos números, Aritmética básica
-
-**Alumno:** Gómez Aguilar Jared Emmanuel  
-**Número de Control:** 22210309  
+# Resta de dos números, Aritmética básica
+# Alumno: Gómez Aguilar Jared Emmanuel  
+# Número de Control: 22210309  
+# Python y Ensamblador
 
 /*
 # Gómez Aguilar Jared Emmanuel 

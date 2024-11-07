@@ -1,5 +1,5 @@
 # Lenguajes de Interfaz - Actividad 18
-# Suma de elementos en un arreglo
+# Convertir binario a decimal
 # Alumno: Gómez Aguilar Jared Emmanuel  
 # Número de Control: 22210309  
 # Python y Ensamblador

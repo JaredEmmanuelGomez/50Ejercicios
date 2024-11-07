@@ -1,14 +1,10 @@
-# Lenguajes de Interfaz - Actividad 1
+// Lenguajes de Interfaz - Actividad 1
+// Conversión de Temperatura, Unidades e I/O
+// Alumno: Gómez Aguilar Jared Emmanuel  
+// Número de Control: 22210309  
+// Descripción: Conversión de temperatura de Celsius a Fahrenheit
+// Python y Ensamblador
 
-### Conversión de Temperatura, Unidades e I/O
-
-**Alumno:** Gómez Aguilar Jared Emmanuel  
-**Número de Control:** 22210309  
-
-Conversión de temperatura de Celsius a Fahrenheit
-Conversión de diferentes unidades
-Manejo de entrada y salida (I/O)
-Tecnologías utilizadas
 
 /*
 # python programa 

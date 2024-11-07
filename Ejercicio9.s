@@ -1,9 +1,10 @@
+/*
 # Leer una entrada desde el teclado
 entrada = input("Introduce algo: ")
 
 # Mostrar lo que el usuario ha introducido
 print("Has introducido:", entrada)
-
+*/
 
 
 //Gómez Aguilar Jared Emmanuel

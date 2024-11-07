@@ -5,5 +5,6 @@
 # Python y Ensamblador
 
 /*
-
+def decimal_a_hexadecimal(decimal):
+    return hex(decimal)[2:]
 */

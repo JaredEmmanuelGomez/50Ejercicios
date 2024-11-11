@@ -5,7 +5,7 @@
 # Descripción: Conversión de temperatura de Celsius a Fahrenheit
 # Python y Ensamblador
 
-
+# ----------------------------------------------
 /*
 # python programa 
 # Programa para convertir temperatura de Celsius a Fahrenheit
@@ -18,7 +18,7 @@ try:
 except ValueError:
     print("Por favor, ingrese un valor numérico válido.")
 */
-
+# -----------------------------------------------
 
 //Gómez Aguilar Jared Emmanuel
 //22210309

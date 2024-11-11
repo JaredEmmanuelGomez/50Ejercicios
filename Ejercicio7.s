@@ -98,3 +98,6 @@ print_loop:
     mov     w0, 0
     ldp     x29, x30, [sp], 32
     ret
+
+ASCIINEMA
+https://asciinema.org/a/688658

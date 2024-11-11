@@ -27,41 +27,91 @@ print("El valor ASCII del carácter es:", resultado)
 //Gómez Aguilar Jared Emmanuel
 //22210309
 .data
-prompt:     .string "Introduce un carácter: "
-format_in:  .string "%c"
-format_out: .string "El valor ASCII del carácter es: %d\n"
-err_msg:    .string "Error: Debes ingresar solo un carácter.\n"
-
-        .text
-        .global main
-        .type main, %function
+    // Mensajes y formatos
+    prompt: .asciz "Ingrese un número (máximo 5 dígitos): "
+    result: .asciz "El número convertido es: %d\n"
+    error_msg: .asciz "Error: Entrada inválida. Solo se permiten dígitos.\n"
+    formato_scan: .asciz "%s"
+    
+    // Buffer para almacenar la entrada
+    .align 4
+    buffer: .skip 6     // 5 dígitos + null terminator
+    
+.text
+.global main
+.extern printf
+.extern scanf
 
 main:
-        stp     x29, x30, [sp, -16]!    // Guardar frame pointer y link register
-        mov     x29, sp                  // Set up frame pointer
-
-        // Imprimir prompt
-        adr     x0, prompt
-        bl      printf
-
-        // Leer carácter
-        sub     sp, sp, #4              // Espacio para el carácter
-        mov     x1, sp                  // Dirección donde guardar input
-        adr     x0, format_in
-        bl      scanf
-
-        // Cargar carácter y convertir a valor ASCII
-        ldrb    w1, [sp]                // Cargar el carácter en w1
-
-        // Imprimir resultado
-        adr     x0, format_out
-        bl      printf
-
-        mov     w0, #0                  // Return 0
-        ldp     x29, x30, [sp], #16     // Restaurar frame pointer y link register
-        ret
-
-        .size main, (. - main)
+    // Prólogo
+    stp x29, x30, [sp, -16]!
+    mov x29, sp
+    
+    // Mostrar prompt
+    adrp x0, prompt
+    add x0, x0, :lo12:prompt
+    bl printf
+    
+    // Leer entrada
+    adrp x0, formato_scan
+    add x0, x0, :lo12:formato_scan
+    adrp x1, buffer
+    add x1, x1, :lo12:buffer
+    bl scanf
+    
+    // Inicializar resultado
+    mov x19, #0      // x19 será nuestro resultado
+    
+    // Preparar para procesar la cadena
+    adrp x20, buffer
+    add x20, x20, :lo12:buffer
+    
+proceso_loop:
+    // Cargar byte actual
+    ldrb w21, [x20]
+    
+    // Verificar si es fin de cadena
+    cmp w21, #0
+    beq fin_conversion
+    
+    // Verificar si es dígito (ASCII 48-57)
+    cmp w21, #48
+    blt error
+    cmp w21, #57
+    bgt error
+    
+    // Convertir ASCII a dígito
+    sub w21, w21, #48
+    
+    // Multiplicar resultado actual por 10 y sumar nuevo dígito
+    mov x22, #10
+    mul x19, x19, x22
+    add x19, x19, x21
+    
+    // Avanzar al siguiente carácter
+    add x20, x20, #1
+    b proceso_loop
+    
+error:
+    
+    adrp x0, error_msg
+    add x0, x0, :lo12:error_msg
+    bl printf
+    mov w0, #1
+    b fin
+    
+fin_conversion:
+    
+    adrp x0, result
+    add x0, x0, :lo12:result
+    mov x1, x19
+    bl printf
+    
+    mov w0, #0
+    
+fin:
+    ldp x29, x30, [sp], #16
+    ret
 
 ASCIINEMA 
 https://asciinema.org/a/688642

@@ -29,49 +29,72 @@ print("El carácter ASCII correspondiente es:", resultado)
 
 //Gómez Aguilar Jared Emmanuel
 //22210309
+.global main
 .data
-prompt:     .string "Introduce un número entero: "
-format_in:  .string "%d"
-format_out: .string "El carácter ASCII correspondiente es: %c\n"
-err_msg:    .string "Error: El número debe estar en el rango de 0 a 127.\n"
+    // Mensajes y buffers
+    msg_input: .string "Ingrese el número entero: "
+    msg_output: .string "El número en el sistema ASCII es: "
+    input_format: .string "%ld"
+    newline: .string "\n"
+    buffer: .skip 20    // Buffer para almacenar los dígitos ASCII
 
-        .text
-        .global main
-        .type main, %function
-
+.text
 main:
-        stp     x29, x30, [sp, -16]!    // Guardar frame pointer y link register
-        mov     x29, sp                  // Set up frame pointer
+    // Prólogo
+    stp     x29, x30, [sp, -32]!
+    mov     x29, sp
 
-        // Imprimir prompt
-        adr     x0, prompt
-        bl      printf
+    // Imprimir mensaje de entrada
+    adr     x0, msg_input
+    bl      printf
 
-        // Leer número
-        sub     sp, sp, #4              // Espacio para el número
-        mov     x1, sp                  // Dirección donde guardar input
-        adr     x0, format_in
-        bl      scanf
+    // Leer número entero
+    sub     sp, sp, 16          // Espacio para variable local
+    mov     x2, sp              // Dirección para almacenar el número
+    adr     x0, input_format
+    mov     x1, x2
+    bl      scanf
 
-        // Verificar rango
-        ldr     w1, [sp]                // Cargar número
-        cmp     w1, #0                  // Comparar con 0
-        blt     range_error
-        cmp     w1, #127                // Comparar con 127
-        bgt     range_error
+    // Cargar el número ingresado
+    ldr     x19, [sp]           // x19 = número ingresado
+    
+    // Preparar para la conversión
+    adr     x20, buffer         // x20 = dirección del buffer
+    mov     x21, 10             // x21 = divisor (10)
+    mov     x22, 0              // x22 = contador de dígitos
 
-        // Imprimir resultado
-        adr     x0, format_out
-        bl      printf
-        b       end
+convert_loop:
+    // Dividir el número por 10
+    udiv    x23, x19, x21       // x23 = cociente
+    msub    x24, x23, x21, x19  // x24 = residuo
+    
+    // Convertir dígito a ASCII
+    add     x24, x24, '0'       // Convertir a ASCII
+    strb    w24, [x20, x22]     // Almacenar en buffer
+    add     x22, x22, 1         // Incrementar contador
+    
+    // Actualizar número para siguiente iteración
+    mov     x19, x23            // Número = cociente
+    
+    // Continuar si el número no es cero
+    cbnz    x19, convert_loop
 
-range_error:
-        adr     x0, err_msg
-        bl      printf
+    // Imprimir mensaje de salida
+    adr     x0, msg_output
+    bl      printf
 
-end:
-        mov     w0, #0                  // Return 0
-        ldp     x29, x30, [sp], #16     // Restaurar frame pointer y link register
-        ret
+    // Imprimir dígitos en orden inverso
+print_loop:
+    sub     x22, x22, 1         // Decrementar contador
+    ldrb    w0, [x20, x22]      // Cargar dígito
+    bl      putchar             // Imprimir dígito
+    cbnz    x22, print_loop     // Continuar si no hemos terminado
 
-        .size main, (. - main)
+    // Imprimir nueva línea
+    adr     x0, newline
+    bl      printf
+
+    // Epílogo y retorno
+    mov     w0, 0
+    ldp     x29, x30, [sp], 32
+    ret

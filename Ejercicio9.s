@@ -4,7 +4,7 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
-
+# --------------------------------------------
 /*
 # Leer una entrada desde el teclado
 entrada = input("Introduce algo: ")
@@ -12,6 +12,7 @@ entrada = input("Introduce algo: ")
 # Mostrar lo que el usuario ha introducido
 print("Has introducido:", entrada)
 */
+# -------------------------------------------
 
 
 //Gómez Aguilar Jared Emmanuel
@@ -49,3 +50,6 @@ main:
         ret
 
         .size main, (. - main)
+
+ASCIINEMA 
+https://asciinema.org/a/688661

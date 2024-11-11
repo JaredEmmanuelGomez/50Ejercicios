@@ -4,3 +4,18 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 # Estructuras de datos
+
+# -------------------------------------
+/*
+class Queue:
+    def __init__(self):
+        self.queue = []
+
+    def enqueue(self, item):
+        self.queue.append(item)
+
+    def dequeue(self):
+        return self.queue.pop(0) if self.queue else None
+
+*/
+# -------------------------------------

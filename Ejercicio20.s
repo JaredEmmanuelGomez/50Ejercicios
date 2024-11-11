@@ -4,7 +4,7 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
-
+# -------------------------------------------
 /*
 def busqueda_lineal(arreglo, elemento):
     for i in range(len(arreglo)):
@@ -12,3 +12,4 @@ def busqueda_lineal(arreglo, elemento):
             return i
     return -1
 */
+# -------------------------------------------

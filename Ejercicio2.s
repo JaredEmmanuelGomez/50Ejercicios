@@ -4,7 +4,7 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
-
+# --------------------------------------------------------------
 /*
 # Gómez Aguilar Jared Emmanuel
 # Python Programa
@@ -24,7 +24,7 @@ except ValueError:
     print("Por favor, ingrese valores numéricos válidos.")
 
 */
-
+# --------------------------------------------------------------
 
 
 //Gómez Aguilar Jared Emmanuel

@@ -19,32 +19,69 @@ def set_clear_toggle_bits(n, pos, action):
 
 // Gómez Aguilar Jared Emmanuel
 // 22210309
-.global set_clear_toggle_bits
+.global main
 .text
 
-// x0: número n
-// x1: posición pos
-// x2: acción (1=set, 2=clear, 3=toggle)
-set_clear_toggle_bits:
-    // Crear máscara con 1 en la posición deseada
-    mov x3, #1
-    lsl x3, x3, x1
+main:
+    // Guardamos el link register
+    stp     x29, x30, [sp, #-16]!
+    mov     x29, sp
+
+    // Inicializamos un número para manipular sus bits
+    mov     x19, #10         // x19 = 10 (1010 en binario)
+
+    // Imprimir valor original
+    adr     x0, msg1
+    mov     x1, x19
+    bl      printf
+
+    // ESTABLECER BIT (Usando OR)
+    // Establecemos el bit 1 (segundo bit)
+    // 1010 OR 0010 = 1010 (no cambia porque ya estaba en 1)
+    mov     x20, x19        // Copiamos el valor original
+    mov     x4, #2          // Creamos la máscara para el bit 1
+    orr     x20, x20, x4    // Establecer bit 1
     
-    cmp x2, #1
-    beq set_bit
-    cmp x2, #2
-    beq clear_bit
-    b toggle_bit
+    // Imprimir resultado después de establecer bit
+    adr     x0, msg2
+    mov     x1, x20
+    bl      printf
 
-set_bit:
-    orr x0, x0, x3
+    // BORRAR BIT (Usando AND con máscara invertida)
+    // Borramos el bit 1 (segundo bit)
+    mov     x21, x19        // Copiamos el valor original
+    mov     x4, #2          // Bit que queremos borrar
+    mvn     x4, x4          // Invertimos la máscara
+    and     x21, x21, x4    // Borrar bit 1
+    
+    // Imprimir resultado después de borrar bit
+    adr     x0, msg3
+    mov     x1, x21
+    bl      printf
+
+    // ALTERNAR BIT (Usando XOR)
+    // Alternamos el bit 3 (cuarto bit)
+    // 1010 XOR 1000 = 0010
+    mov     x22, x19        // Copiamos el valor original
+    mov     x4, #8          // Creamos la máscara para el bit 3
+    eor     x22, x22, x4    // Alternar bit 3
+    
+    // Imprimir resultado después de alternar bit
+    adr     x0, msg4
+    mov     x1, x22
+    bl      printf
+
+    // Restauramos el stack y retornamos
+    ldp     x29, x30, [sp], #16
+    mov     w0, #0
     ret
 
-clear_bit:
-    mvn x3, x3
-    and x0, x0, x3
-    ret
-
-toggle_bit:
-    eor x0, x0, x3
-    ret
+.section .rodata
+msg1:
+    .string "Valor original en decimal (binario 1010): %d\n"
+msg2:
+    .string "Después de establecer bit 1: %d\n"
+msg3:
+    .string "Después de borrar bit 1: %d\n"
+msg4:
+    .string "Después de alternar bit 3: %d\n"

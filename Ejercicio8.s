@@ -4,7 +4,7 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
-
+# -------------------------------------------------
 /*
 # Función para calcular la longitud de una cadena
 def calcular_longitud(cadena):
@@ -19,6 +19,7 @@ longitud = calcular_longitud(cadena)
 # Mostrar el resultado
 print("La longitud de la cadena es:", longitud)
 */
+# ------------------------------------------------
 
 
 

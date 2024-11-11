@@ -73,3 +73,5 @@ ret // Regresar del programa
 
 .data
 input_format: .asciz "%255s" // Formato para leer una cadena de hasta 255 caracteres
+
+ASCIINEMA

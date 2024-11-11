@@ -4,3 +4,13 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 # Generación de números pseudoaleatorios
+
+# --------------------------------------
+/*
+import random
+
+def random_number(seed=None):
+    random.seed(seed)
+    return random.randint(0, 100)
+*/
+# --------------------------------------

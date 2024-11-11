@@ -4,7 +4,9 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
+# ----------------------------------------
 /*
 def binario_a_decimal(binario):
     return int(binario, 2)
 */
+# -----------------------------------------

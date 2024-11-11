@@ -4,7 +4,7 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
-
+# ------------------------------------------------------------------------
 /*
 # Función para convertir un carácter a su valor ASCII
 def ascii_a_entero(caracter):
@@ -20,6 +20,7 @@ caracter = input("Introduce un carácter: ")
 resultado = ascii_a_entero(caracter)
 print("El valor ASCII del carácter es:", resultado)
 */
+# --------------------------------------------------------------------------
 
 
 

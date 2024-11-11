@@ -64,3 +64,7 @@ main:
         ret
 
         .size main, (. - main)
+
+
+ASCIINEMA
+https://asciinema.org/a/688660

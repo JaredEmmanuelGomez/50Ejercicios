@@ -4,3 +4,10 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 # Operaciones de desplazamiento
+
+# ----------------------------
+/*
+def bit_shifts(n, shift):
+    return n << shift, n >> shift
+*/
+# ----------------------------

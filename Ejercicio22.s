@@ -7,7 +7,7 @@
 
 # ---------------------
 /*
-def find_min(arr):
-    return min(arr)
+def find_max(arr):
+    return max(arr)
 */
 # --------------------

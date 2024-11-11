@@ -4,8 +4,9 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
-
+#-------------------------------------------------
 # Función para verificar si un número es primo
+/*
 def es_primo(numero):
     if numero <= 1:
         return False
@@ -24,7 +25,8 @@ if es_primo(numero):
     print(f"{numero} es un número primo.")
 else:
     print(f"{numero} no es un número primo.")
-
+*/
+#--------------------------------------------------
 
 
 

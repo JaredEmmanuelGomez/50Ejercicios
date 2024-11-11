@@ -4,3 +4,10 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 # Operaciones a nivel de bits
+
+# -----------------------------------
+/*
+def bitwise_operations(a, b):
+    return a & b, a | b, a ^ b
+*/
+# -----------------------------------

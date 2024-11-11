@@ -4,8 +4,10 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
+# ---------------------------------------
 /*
 def suma_arreglo(arreglo):
     return sum(arreglo)
 */
+# ---------------------------------------
 

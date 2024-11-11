@@ -4,7 +4,10 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
+
+# ------------------------------------
 /*
 def decimal_a_binario(decimal):
     return bin(decimal)[2:]
 */
+# ------------------------------------

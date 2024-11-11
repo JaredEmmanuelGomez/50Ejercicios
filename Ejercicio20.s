@@ -18,7 +18,7 @@ def busqueda_lineal(arreglo, elemento):
 // Gómez Aguilar Jared Emmanuel
 // 22210309
 // búsqueda_lineal.s
-.global_start
+.global main
 
 .data
     array:      .quad   1, 3, 5, 7, 9, 11, 13, 15    // Array de ejemplo

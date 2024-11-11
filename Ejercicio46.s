@@ -4,3 +4,11 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 # Aritmética y flujo de control
+
+# ------------------------------------------------------------
+/*
+def is_armstrong(n):
+    power = len(str(n))
+    return n == sum(int(digit) ** power for digit in str(n))
+*/
+# ------------------------------------------------------------

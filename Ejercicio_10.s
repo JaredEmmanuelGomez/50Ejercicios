@@ -102,3 +102,7 @@ end:
         ret
 
         .size main, (. - main)
+
+
+ASCIINEMA REC
+https://asciinema.org/a/688665

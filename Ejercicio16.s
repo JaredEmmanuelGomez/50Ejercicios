@@ -4,6 +4,7 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
+# --------------------------------------
 /*
 def factorial(n):
     resultado = 1
@@ -11,4 +12,5 @@ def factorial(n):
         resultado *= i
     return resultado
 */
+# --------------------------------------
 

@@ -4,10 +4,14 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
+# ------------------------
 /*
 def invertir_cadena(cadena):
     return cadena[::-1]
 */
+# --------------------------
+
+
 
 
 //Alumno: Gómez Aguilar Jared Emmanuel 

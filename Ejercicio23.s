@@ -4,3 +4,10 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 # Recorrido de arreglos
+
+# ---------------------------------
+/*
+def find_min(arr):
+    return min(arr)
+*/
+# ---------------------------------

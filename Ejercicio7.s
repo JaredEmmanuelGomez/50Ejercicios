@@ -4,7 +4,7 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
-
+# ----------------------------------------------------------------------------------------
 /*
 # Función para convertir un número entero a su carácter ASCII
 def entero_a_ascii(numero):
@@ -24,6 +24,7 @@ numero = int(input("Introduce un número entero: "))
 resultado = entero_a_ascii(numero)
 print("El carácter ASCII correspondiente es:", resultado)
 */
+# --------------------------------------------------------------------------------------------
 
 
 //Gómez Aguilar Jared Emmanuel

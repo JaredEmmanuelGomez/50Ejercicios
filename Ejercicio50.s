@@ -4,3 +4,11 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 # Manejo de archivos y llamadas al sistema
+
+# ---------------------------------------
+/*
+def write_to_file(filename, content):
+    with open(filename, 'w') as f:
+        f.write(content)
+*/
+# ---------------------------------------------

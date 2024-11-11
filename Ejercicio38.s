@@ -4,3 +4,10 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 # Recursión/bucles
+
+# --------------------
+/*
+def power(x, n):
+    return x ** n
+*/
+# -------------------

@@ -28,12 +28,12 @@ print("El valor ASCII del carácter es:", resultado)
 //22210309
 .data
     // Mensajes y formatos
-    prompt: .asciz "Ingrese un número (máximo 5 dígitos): "
+    prompt: .asciz "Ingrese un número: "
     result: .asciz "El número convertido es: %d\n"
-    error_msg: .asciz "Error: Entrada inválida. Solo se permiten dígitos.\n"
+    error_msg: .asciz "Error: Solo se permiten dígitos.\n"
     formato_scan: .asciz "%s"
     
-    // Buffer para almacenar la entrada
+    //Almacenar la entrada
     .align 4
     buffer: .skip 6     // 5 dígitos + null terminator
     

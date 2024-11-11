@@ -4,3 +4,12 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 # Aritmética, algoritmo de Euclides
+
+# ---------------------------
+/*
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+*/
+# ---------------------------

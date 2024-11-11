@@ -4,7 +4,7 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
-
+# -------------------------------------------------------------------------
 /*
 # Programa para multiplicar dos números en Python
 # Solicita al usuario los dos números
@@ -21,7 +21,7 @@ except ValueError:
     print("Por favor, ingrese valores numéricos válidos.")
 
 */
-
+# ---------------------------------------------------------------------------
 
 //Gómez Aguilar Jared Emmanuel
 //22210309

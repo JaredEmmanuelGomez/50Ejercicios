@@ -12,8 +12,6 @@ def invertir_cadena(cadena):
 # --------------------------
 
 
-
-
 //Alumno: Gómez Aguilar Jared Emmanuel 
 //Número de Control: 22210309 
 .data

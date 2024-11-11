@@ -85,3 +85,8 @@ msg3:
     .string "Después de borrar bit 1: %d\n"
 msg4:
     .string "Después de alternar bit 3: %d\n"
+
+
+ASCIINEMA
+https://asciinema.org/a/688635
+

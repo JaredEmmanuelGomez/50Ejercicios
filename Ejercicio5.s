@@ -4,7 +4,7 @@
 # Número de Control: 22210309  
 # Python y Ensamblador
 
-
+# -----------------------------------------------------------------
 /*
 # Función para dividir dos números
 def dividir_numeros(num1, num2):
@@ -22,7 +22,7 @@ numero2 = float(input("Introduce el segundo número: "))
 resultado = dividir_numeros(numero1, numero2)
 print("El resultado de la división es:", resultado)
 */
-
+# -----------------------------------------------------------------
 
 
 //Gómez Aguilar Jared Emmanuel

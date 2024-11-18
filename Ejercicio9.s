@@ -52,4 +52,4 @@ main:
         .size main, (. - main)
 
 ASCIINEMA 
-https://asciinema.org/a/688661
+https://asciinema.org/a/690313

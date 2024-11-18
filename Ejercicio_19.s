@@ -14,42 +14,88 @@ def suma_arreglo(arreglo):
 // Gómez Aguilar Jared Emmanuel
 // 22210309
 .data
-    array:      .quad 1, 2, 3, 4, 5  // Arreglo de números
-    arr_size:   .quad 5              // Tamaño del arreglo
-    result:     .quad 0              // Resultado
-    fmt_str:    .asciz "Suma del arreglo: %lld\n"
+    size_prompt:    .asciz "Enter the size of array: "
+    elem_prompt:    .asciz "Enter element %d: "
+    outfmt:         .asciz "Sum of array elements: %ld\n"
+    scanfmt:        .asciz "%ld"
+    array:          .skip 400       // Space for 50 long integers
+    size:           .quad 0
 
 .text
-.global main
-.align 2
+    .global main
+    .align 2
 
 main:
-    stp x29, x30, [sp, #-16]!    // Guardar registros
-    mov x29, sp
+    stp     x29, x30, [sp, -16]!
+    mov     x29, sp
 
-    // Inicializar
-    adr x0, array                // Dirección del arreglo
-    ldr x1, arr_size            // Tamaño del arreglo
-    mov x2, #0                   // Suma inicial
+    // Print size prompt
+    adrp    x0, size_prompt
+    add     x0, x0, :lo12:size_prompt
+    bl      printf
+
+    // Read size
+    adrp    x0, scanfmt
+    add     x0, x0, :lo12:scanfmt
+    adrp    x1, size
+    add     x1, x1, :lo12:size
+    bl      scanf
+
+    // Initialize array input
+    mov     x19, #0               // Counter
+    adrp    x20, array           // Array base address
+    add     x20, x20, :lo12:array
+    adrp    x21, size
+    add     x21, x21, :lo12:size
+    ldr     x21, [x21]           // Size value
+
+input_loop:
+    cmp     x19, x21
+    b.ge    calculate_sum        // If counter >= size, start sum
+
+    // Print element prompt
+    adrp    x0, elem_prompt
+    add     x0, x0, :lo12:elem_prompt
+    add     x1, x19, #1          // Element number (1-based)
+    bl      printf
+
+    // Read element
+    adrp    x0, scanfmt
+    add     x0, x0, :lo12:scanfmt
+    mov     x1, x20              // Current array position
+    bl      scanf
+
+    add     x20, x20, #8         // Move to next array position
+    add     x19, x19, #1         // Increment counter
+    b       input_loop
+
+calculate_sum:
+    mov     x19, #0              // Reset counter
+    mov     x22, #0              // Sum
+    adrp    x20, array          // Reset array pointer
+    add     x20, x20, :lo12:array
 
 sum_loop:
-    ldr x3, [x0], #8            // Cargar siguiente elemento
-    add x2, x2, x3              // Sumar al total
-    subs x1, x1, #1             // Decrementar contador
-    b.ne sum_loop               // Continuar si no es cero
+    cmp     x19, x21
+    b.ge    print_result        // If counter >= size, print result
+    
+    ldr     x23, [x20], #8      // Load value and increment pointer
+    add     x22, x22, x23       // Add to sum
+    add     x19, x19, #1        // Increment counter
+    b       sum_loop
 
-    // Guardar resultado
-    adr x3, result
-    str x2, [x3]
+print_result:
+    // Print sum
+    adrp    x0, outfmt
+    add     x0, x0, :lo12:outfmt
+    mov     x1, x22
+    bl      printf
 
-    // Imprimir resultado
-    adr x0, fmt_str
-    ldr x1, result
-    bl printf
-
-    mov w0, #0
-    ldp x29, x30, [sp], #16
+    mov     w0, #0
+    ldp     x29, x30, [sp], #16
     ret
+
+.size main, .-main
 
 ASCIINEMA
 https://asciinema.org/a/688680

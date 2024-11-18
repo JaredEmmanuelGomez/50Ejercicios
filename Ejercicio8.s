@@ -67,4 +67,4 @@ main:
 
 
 ASCIINEMA
-https://asciinema.org/a/688660
+https://asciinema.org/a/690312

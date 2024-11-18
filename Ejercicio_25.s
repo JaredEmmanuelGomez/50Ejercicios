@@ -19,64 +19,143 @@ def bubble_sort(arr):
 
 // Gómez Aguilar Jared Emmanuel
 // 22210309
-// bubble_sort.s
-.global _start
-
 .data
-    array:      .quad   64, 34, 25, 12, 22, 11, 90   // Array a ordenar
-    array_size: .quad   7                            // Tamaño del array
-    
+    input_size: .asciz "Enter array size: "
+    input_num: .asciz "Enter number %d: "
+    output_msg: .asciz "Sorted array: "
+    scan_format: .asciz "%d"
+    print_format: .asciz "%d "
+    newline: .asciz "\n"
+
+.bss
+    .align 4
+    array: .skip 400    // Space for up to 100 integers
+    size: .skip 4       // Variable to store array size
+
 .text
-_start:
-    ldr x0, =array           // Cargar dirección del array
-    ldr x1, =array_size     // Cargar tamaño del array
-    ldr x1, [x1]           // Obtener valor del tamaño
-    bl bubble_sort        // Llamar a la función
-    
-    // Salir del programa
-    mov x8, #93
-    mov x0, #0
-    svc #0
+.global main
+main:
+    // Save link register
+    str lr, [sp, -16]!
+
+    // Print prompt for array size
+    adrp x0, input_size
+    add x0, x0, :lo12:input_size
+    bl printf
+
+    // Read array size
+    adrp x0, scan_format
+    add x0, x0, :lo12:scan_format
+    adrp x1, size
+    add x1, x1, :lo12:size
+    bl scanf
+
+    // Initialize counter for array input
+    mov w21, #0
+
+input_loop:
+    // Check if we've input all numbers
+    adrp x0, size
+    add x0, x0, :lo12:size
+    ldr w1, [x0]
+    cmp w21, w1
+    b.ge bubble_sort
+
+    // Print prompt for number
+    adrp x0, input_num
+    add x0, x0, :lo12:input_num
+    mov w1, w21
+    bl printf
+
+    // Read number
+    adrp x0, scan_format
+    add x0, x0, :lo12:scan_format
+    adrp x1, array
+    add x1, x1, :lo12:array
+    add x1, x1, w21, lsl #2
+    bl scanf
+
+    // Increment counter
+    add w21, w21, #1
+    b input_loop
 
 bubble_sort:
-    // Entrada:
-    // x0: dirección base del array
-    // x1: tamaño del array
-    
-    sub x2, x1, #1          // n-1 para el bucle exterior
-    mov x3, #0             // i = 0 (bucle exterior)
-    
+    // Initialize outer loop counter
+    adrp x0, size
+    add x0, x0, :lo12:size
+    ldr w21, [x0]       // n = size
+    sub w21, w21, #1    // n-1 for outer loop
+
 outer_loop:
-    cmp x3, x2             // Comparar i con n-1
-    b.ge sort_end         // Si i >= n-1, terminar
+    // Check outer loop condition
+    cmp w21, #0
+    b.le print_array
     
-    mov x4, #0            // j = 0 (bucle interior)
-    sub x5, x2, x3       // límite = n-1-i
-    
+    // Initialize inner loop counter
+    mov w22, #0
+
 inner_loop:
-    cmp x4, x5           // Comparar j con límite
-    b.ge outer_continue  // Si j >= límite, siguiente iteración exterior
-    
-    // Cargar array[j] y array[j+1]
-    ldr x6, [x0, x4, lsl #3]
-    add x7, x4, #1
-    ldr x8, [x0, x7, lsl #3]
-    
-    // Comparar y intercambiar si necesario
-    cmp x6, x8
-    b.le inner_continue  // Si array[j] <= array[j+1], continuar
-    
-    // Intercambiar elementos
-    str x8, [x0, x4, lsl #3]
-    str x6, [x0, x7, lsl #3]
-    
-inner_continue:
-    add x4, x4, #1      // j++
+    // Check inner loop condition
+    cmp w22, w21
+    b.ge next_outer
+
+    // Load array[j] and array[j+1]
+    adrp x0, array
+    add x0, x0, :lo12:array
+    ldr w23, [x0, w22, sxtw #2]
+    add x1, x0, #4
+    ldr w24, [x0, w22, sxtw #2, lsl #1]
+
+    // Compare and swap if needed
+    cmp w23, w24
+    b.le no_swap
+
+    // Swap elements
+    str w24, [x0, w22, sxtw #2]
+    str w23, [x1, w22, sxtw #2]
+
+no_swap:
+    add w22, w22, #1
     b inner_loop
-    
-outer_continue:
-    add x3, x3, #1      // i++
+
+next_outer:
+    sub w21, w21, #1
     b outer_loop
-    
-sort_end:
+
+print_array:
+    // Print sorted array message
+    adrp x0, output_msg
+    add x0, x0, :lo12:output_msg
+    bl printf
+
+    // Initialize print counter
+    mov w21, #0
+
+print_loop:
+    // Check print condition
+    adrp x0, size
+    add x0, x0, :lo12:size
+    ldr w1, [x0]
+    cmp w21, w1
+    b.ge print_newline
+
+    // Print number
+    adrp x0, print_format
+    add x0, x0, :lo12:print_format
+    adrp x2, array
+    add x2, x2, :lo12:array
+    ldr w1, [x2, w21, sxtw #2]
+    bl printf
+
+    add w21, w21, #1
+    b print_loop
+
+print_newline:
+    adrp x0, newline
+    add x0, x0, :lo12:newline
+    bl printf
+
+    // Restore link register and return
+    ldr lr, [sp], #16
+    mov w0, #0
     ret

@@ -14,48 +14,92 @@ def find_max(arr):
 
 // Gómez Aguilar Jared Emmanuel
 // 22210309
-// find_max.s
-.global _start
-
 .data
-    array:      .quad   1, 15, 3, 8, 12, 5, 9, 4    // Array de ejemplo
-    array_size: .quad   8                           // Tamaño del array
-    
+    size_prompt:    .asciz "Enter the size of array: "
+    elem_prompt:    .asciz "Enter element %d: "
+    outfmt:         .asciz "Maximum element is: %ld\n"
+    scanfmt:        .asciz "%ld"
+    array:          .skip 400       // Space for 50 long integers
+    size:           .quad 0
+
 .text
-_start:
-    ldr x0, =array           // Cargar dirección del array
-    ldr x1, =array_size     // Cargar tamaño del array
-    ldr x1, [x1]           // Obtener valor del tamaño
-    bl find_max           // Llamar a la función
-    
-    // Salir del programa
-    mov x8, #93
-    mov x0, #0
-    svc #0
+    .global main
+    .align 2
+
+main:
+    stp     x29, x30, [sp, -16]!
+    mov     x29, sp
+
+    // Print size prompt
+    adrp    x0, size_prompt
+    add     x0, x0, :lo12:size_prompt
+    bl      printf
+
+    // Read size
+    adrp    x0, scanfmt
+    add     x0, x0, :lo12:scanfmt
+    adrp    x1, size
+    add     x1, x1, :lo12:size
+    bl      scanf
+
+    // Initialize array input
+    mov     x19, #0               // Counter
+    adrp    x20, array           // Array base address
+    add     x20, x20, :lo12:array
+    adrp    x21, size
+    add     x21, x21, :lo12:size
+    ldr     x21, [x21]           // Size value
+
+input_loop:
+    cmp     x19, x21
+    b.ge    find_max            // If counter >= size, find maximum
+
+    // Print element prompt
+    adrp    x0, elem_prompt
+    add     x0, x0, :lo12:elem_prompt
+    add     x1, x19, #1          // Element number (1-based)
+    bl      printf
+
+    // Read element
+    adrp    x0, scanfmt
+    add     x0, x0, :lo12:scanfmt
+    mov     x1, x20              // Current array position
+    bl      scanf
+
+    add     x20, x20, #8         // Move to next array position
+    add     x19, x19, #1         // Increment counter
+    b       input_loop
 
 find_max:
-    // Entrada:
-    // x0: dirección base del array
-    // x1: tamaño del array
-    // Salida:
-    // x0: valor máximo
-    
-    ldr x2, [x0]          // Inicializar máximo con primer elemento
-    mov x3, #1           // Inicializar índice (i = 1)
-    
+    // Initialize max with first element
+    adrp    x20, array
+    add     x20, x20, :lo12:array
+    ldr     x22, [x20]           // Maximum value
+    mov     x19, #1              // Start counter from 1
+    add     x20, x20, #8         // Move to second element
+
 max_loop:
-    cmp x3, x1           // Comparar i con tamaño
-    b.ge max_end        // Si i >= tamaño, terminar
+    cmp     x19, x21
+    b.ge    print_result         // If counter >= size, print result
     
-    ldr x4, [x0, x3, lsl #3]  // Cargar array[i]
-    cmp x4, x2          // Comparar con máximo actual
-    b.le max_continue   // Si es menor o igual, continuar
-    mov x2, x4         // Actualizar máximo
-    
-max_continue:
-    add x3, x3, #1     // i++
-    b max_loop
-    
-max_end:
-    mov x0, x2         // Retornar máximo
+    ldr     x23, [x20], #8       // Load value and increment pointer
+    cmp     x23, x22
+    b.le    next_iter            // If current <= max, continue
+    mov     x22, x23             // Update max if current > max
+
+next_iter:
+    add     x19, x19, #1         // Increment counter
+    b       max_loop
+
+print_result:
+    // Print maximum
+    adrp    x0, outfmt
+    add     x0, x0, :lo12:outfmt
+    mov     x1, x22
+    bl      printf
+
+    mov     w0, #0
+    ldp     x29, x30, [sp], #16
     ret
+
+.size main, .-main

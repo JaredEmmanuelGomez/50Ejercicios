@@ -14,111 +14,127 @@ def transpose_matrix(matrix):
 
 // Gómez Aguilar Jared Emmanuel
 // 22210309
-// matrix_transpose.s
-.global _start
-
 .data
-    // Matriz de ejemplo 3x3
-    matrix:     .quad   1, 2, 3
-                .quad   4, 5, 6
-                .quad   7, 8, 9
-                
-    result:     .space  72      // Espacio para matriz transpuesta
-    matrix_size:.quad   3       // Tamaño de la matriz (3x3)
-    
+    prompt_size: .asciz "Enter matrix size (N for NxN): "
+    input_msg: .asciz "Enter matrix elements:\n"
+    input_element: .asciz "Enter element [%d][%d]: "
+    output_msg: .asciz "Transposed matrix:\n"
+    element_fmt: .asciz "%d\t"
+    scan_format: .asciz "%d"
+    newline: .asciz "\n"
+
+.bss
+    .align 4
+    matrix: .skip 400     // Space for input matrix
+    result: .skip 400     // Space for transposed matrix
+    size: .skip 4         // Matrix size (N for NxN)
+
 .text
-_start:
-    ldr x0, =matrix
-    ldr x1, =result
-    ldr x2, =matrix_size
-    ldr x2, [x2]
-    bl transpose_matrix
-    
-    mov x8, #93            // exit syscall
-    mov x0, #0
-    svc #0
+.global main
+main:
+    // Save link register
+    str lr, [sp, -16]!
+
+    // Get matrix size
+    adrp x0, prompt_size
+    add x0, x0, :lo12:prompt_size
+    bl printf
+
+    adrp x0, scan_format
+    add x0, x0, :lo12:scan_format
+    adrp x1, size
+    add x1, x1, :lo12:size
+    bl scanf
+
+    // Input matrix
+    adrp x0, input_msg
+    add x0, x0, :lo12:input_msg
+    bl printf
+
+    mov w21, #0    // row counter
+input_row_loop:
+    ldr w0, [size]
+    cmp w21, w0
+    b.ge transpose_matrix
+
+    mov w22, #0    // column counter
+input_col_loop:
+    ldr w0, [size]
+    cmp w22, w0
+    b.ge next_input_row
+
+    // Print prompt
+    adrp x0, input_element
+    add x0, x0, :lo12:input_element
+    mov w1, w21
+    mov w2, w22
+    bl printf
+
+    // Read element
+    adrp x0, scan_format
+    add x0, x0, :lo12:scan_format
+    adrp x1, matrix
+    add x1, x1, :lo12:matrix
+    ldr w3, [size]
+    mul w4, w21, w3
+    add w4, w4, w22
+    lsl w4, w4, #2
+    add x1, x1, x4
+    bl scanf
+
+    add w22, w22, #1
+    b input_col_loop
+
+next_input_row:
+    add w21, w21, #1
+    b input_row_loop
 
 transpose_matrix:
-    // x0: matriz original
-    // x1: matriz resultado
-    // x2: tamaño (n)
-    stp x29, x30, [sp, #-16]!
-    mov x29, sp
-    
-    mov x3, #0              // i = 0
-outer_loop_trans:
-    cmp x3, x2
-    b.ge trans_end
-    
-    mov x4, #0              // j = 0
-inner_loop_trans:
-    cmp x4, x2
-    b.ge outer_continue_trans
-    
-    // Calcular offset origen = (i * n + j) * 8
-    mul x5, x3, x2
-    add x5, x5, x4
-    lsl x5, x5, #3
-    
-    // Calcular offset destino = (j * n + i) * 8
-    mul x6, x4, x2
-    add x6, x6, x3
-    lsl x6, x6, #3
-    
-    // Transponer elemento
-    ldr x7, [x0, x5]
-    str x7, [x1, x6]
-    
-    add x4, x4, #1
-    b inner_loop_trans
-    
-outer_continue_trans:
-    add x3, x3, #1
-    b outer_loop_trans
-    
-trans_end:
-    ldp x29, x30, [sp], #16
-    ret
+    mov w21, #0    // row counter
+trans_row_loop:
+    ldr w0, [size]
+    cmp w21, w0
+    b.ge print_result
 
-// Función auxiliar para imprimir matriz (opcional)
-print_matrix:
-    // x0: dirección de la matriz
-    // x1: tamaño
-    stp x29, x30, [sp, #-16]!
-    mov x29, sp
-    
-    mov x2, #0              // i = 0
-print_outer:
-    cmp x2, x1
-    b.ge print_end
-    
-    mov x3, #0              // j = 0
-print_inner:
-    cmp x3, x1
-    b.ge print_newline
-    
-    // Calcular offset
-    mul x4, x2, x1
-    add x4, x4, x3
-    lsl x4, x4, #3
-    
-    // Cargar y guardar valor para imprimir
-    ldr x0, [x0, x4]
-    bl print_num
-    
-    mov x0, #32            // Imprimir espacio
-    bl print_char
-    
-    add x3, x3, #1
-    b print_inner
-    
-print_newline:
-    mov x0, #10            // Imprimir nueva línea
-    bl print_char
-    
-    add x2, x2, #1
-    b print_outer
-    
-print_end:
-    ldp x29, x30, [sp], #16
-    ret
+    mov w22, #0    // column counter
+trans_col_loop:
+    ldr w0, [size]
+    cmp w22, w0
+    b.ge next_trans_row
+
+    // Calculate indices
+    ldr w3, [size]
+    mul w4, w21, w3    // i * n
+    add w4, w4, w22    // i * n + j
+    lsl w4, w4, #2     // (i * n + j) * 4
+
+    mul w5, w22, w3    // j * n
+    add w5, w5, w21    // j * n + i
+    lsl w5, w5, #2     // (j * n + i) * 4
+
+    // Load and store transposed element
+    adrp x0, matrix
+    add x0, x0, :lo12:matrix
+    ldr w6, [x0, x4]    // matrix[i][j]
+
+    adrp x1, result
+    add x1, x1, :lo12:result
+    str w6, [x1, x5]    // result[j][i]
+
+    add w22, w22, #1
+    b trans_col_loop
+
+next_trans_row:
+    add w21, w21, #1
+    b trans_row_loop
+
+print_result:
+    // Print result matrix
+    adrp x0, output_msg
+    add x0, x0, :lo12:output_msg
+    bl printf
+
+    mov w21, #0    // row counter
+print_row_loop:
+    ldr w0, [size]
+    cmp w21, w0

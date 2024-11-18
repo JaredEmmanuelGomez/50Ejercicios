@@ -17,52 +17,111 @@ def busqueda_lineal(arreglo, elemento):
 
 // Gómez Aguilar Jared Emmanuel
 // 22210309
-// búsqueda_lineal.s
-.global main
-
 .data
-    array:      .quad   1, 3, 5, 7, 9, 11, 13, 15    // Array de ejemplo
-    array_size: .quad   8                            // Tamaño del array
-    
+    size_prompt:    .asciz "Enter the size of array: "
+    elem_prompt:    .asciz "Enter element %d: "
+    search_prompt:  .asciz "Enter number to search: "
+    found_msg:      .asciz "Number found at position: %d\n"
+    not_found_msg:  .asciz "Number not found in array\n"
+    scanfmt:        .asciz "%ld"
+    array:          .skip 400       // Space for 50 long integers
+    size:           .quad 0
+    search_num:     .quad 0
+
 .text
-_start:
-    // Ejemplo de uso
-    ldr x0, =array           // Cargar dirección del array
-    mov x1, #7              // Elemento a buscar
-    ldr x2, =array_size     // Cargar tamaño del array
-    ldr x2, [x2]           // Obtener valor del tamaño
-    bl linear_search       // Llamar a la función
+    .global main
+    .align 2
 
-    // Salir del programa
-    mov x8, #93           // Syscall exit
-    mov x0, #0           // Código de retorno
-    svc #0              // Llamada al sistema
+main:
+    stp     x29, x30, [sp, -16]!
+    mov     x29, sp
 
-linear_search:
-    // Entrada:
-    // x0: dirección base del array
-    // x1: elemento a buscar
-    // x2: tamaño del array
-    // Salida:
-    // x0: índice encontrado (-1 si no se encuentra)
+    // Print size prompt
+    adrp    x0, size_prompt
+    add     x0, x0, :lo12:size_prompt
+    bl      printf
+
+    // Read size
+    adrp    x0, scanfmt
+    add     x0, x0, :lo12:scanfmt
+    adrp    x1, size
+    add     x1, x1, :lo12:size
+    bl      scanf
+
+    // Initialize array input
+    mov     x19, #0               // Counter
+    adrp    x20, array           // Array base address
+    add     x20, x20, :lo12:array
+    adrp    x21, size
+    add     x21, x21, :lo12:size
+    ldr     x21, [x21]           // Size value
+
+input_loop:
+    cmp     x19, x21
+    b.ge    get_search_num       // If counter >= size, get search number
+
+    // Print element prompt
+    adrp    x0, elem_prompt
+    add     x0, x0, :lo12:elem_prompt
+    add     x1, x19, #1          // Element number (1-based)
+    bl      printf
+
+    // Read element
+    adrp    x0, scanfmt
+    add     x0, x0, :lo12:scanfmt
+    mov     x1, x20              // Current array position
+    bl      scanf
+
+    add     x20, x20, #8         // Move to next array position
+    add     x19, x19, #1         // Increment counter
+    b       input_loop
+
+get_search_num:
+    // Print search prompt
+    adrp    x0, search_prompt
+    add     x0, x0, :lo12:search_prompt
+    bl      printf
+
+    // Read search number
+    adrp    x0, scanfmt
+    add     x0, x0, :lo12:scanfmt
+    adrp    x1, search_num
+    add     x1, x1, :lo12:search_num
+    bl      scanf
+
+    // Linear search
+    mov     x19, #0              // Counter
+    adrp    x20, array          // Reset array pointer
+    add     x20, x20, :lo12:array
+    adrp    x22, search_num
+    add     x22, x22, :lo12:search_num
+    ldr     x22, [x22]          // Number to search
+
+search_loop:
+    cmp     x19, x21
+    b.ge    not_found           // If counter >= size, number not found
     
-    mov x3, #0              // Inicializar índice (i = 0)
-    
-loop_linear:
-    cmp x3, x2              // Comparar i con tamaño
-    b.ge not_found         // Si i >= tamaño, no encontrado
-    
-    ldr x4, [x0, x3, lsl #3]  // Cargar array[i]
-    cmp x4, x1              // Comparar con elemento buscado
-    b.eq found             // Si son iguales, encontrado
-    
-    add x3, x3, #1         // i++
-    b loop_linear         // Siguiente iteración
-    
-not_found:
-    mov x0, #-1            // Retornar -1
-    ret
-    
+    ldr     x23, [x20], #8      // Load value and increment pointer
+    cmp     x23, x22
+    b.eq    found              // If equal, number found
+    add     x19, x19, #1        // Increment counter
+    b       search_loop
+
 found:
-    mov x0, x3             // Retornar índice
+    adrp    x0, found_msg
+    add     x0, x0, :lo12:found_msg
+    add     x1, x19, #1         // Position (1-based)
+    bl      printf
+    b       exit
+
+not_found:
+    adrp    x0, not_found_msg
+    add     x0, x0, :lo12:not_found_msg
+    bl      printf
+
+exit:
+    mov     w0, #0
+    ldp     x29, x30, [sp], #16
     ret
+
+.size main, .-main

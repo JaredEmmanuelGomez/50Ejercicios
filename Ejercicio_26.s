@@ -20,68 +20,156 @@ def selection_sort(arr):
 
 // Gómez Aguilar Jared Emmanuel
 // 22210309
-// selection_sort.s
-.global _start
-
 .data
-    array:      .quad   64, 25, 12, 22, 11, 1, 90    // Array a ordenar
-    array_size: .quad   7                            // Tamaño del array
-    
+    input_size: .asciz "Enter array size: "
+    input_num: .asciz "Enter number %d: "
+    output_msg: .asciz "Sorted array: "
+    scan_format: .asciz "%d"
+    print_format: .asciz "%d "
+    newline: .asciz "\n"
+
+.bss
+    .align 4
+    array: .skip 400    // Space for up to 100 integers
+    size: .skip 4       // Variable to store array size
+
 .text
-_start:
-    ldr x0, =array
-    ldr x1, =array_size
-    ldr x1, [x1]
-    bl selection_sort
-    
-    mov x8, #93    // exit syscall
-    mov x0, #0
-    svc #0
+.global main
+main:
+    // Save link register
+    str lr, [sp, -16]!
+
+    // Print prompt for array size
+    adrp x0, input_size
+    add x0, x0, :lo12:input_size
+    bl printf
+
+    // Read array size
+    adrp x0, scan_format
+    add x0, x0, :lo12:scan_format
+    adrp x1, size
+    add x1, x1, :lo12:size
+    bl scanf
+
+    // Initialize counter for array input
+    mov w21, #0
+
+input_loop:
+    // Check if we've input all numbers
+    adrp x0, size
+    add x0, x0, :lo12:size
+    ldr w1, [x0]
+    cmp w21, w1
+    b.ge selection_sort
+
+    // Print prompt for number
+    adrp x0, input_num
+    add x0, x0, :lo12:input_num
+    mov w1, w21
+    bl printf
+
+    // Read number
+    adrp x0, scan_format
+    add x0, x0, :lo12:scan_format
+    adrp x1, array
+    add x1, x1, :lo12:array
+    add x1, x1, w21, lsl #2
+    bl scanf
+
+    // Increment counter
+    add w21, w21, #1
+    b input_loop
 
 selection_sort:
-    // x0: dirección base del array
-    // x1: tamaño del array
-    stp x29, x30, [sp, #-16]!
-    mov x29, sp
-    
-    mov x2, #0                  // i = 0
-    
+    // Initialize outer loop counter
+    mov w21, #0        // i = 0
+
 outer_loop:
-    cmp x2, x1                  // i < size?
-    b.ge sort_end
+    // Check outer loop condition
+    adrp x0, size
+    add x0, x0, :lo12:size
+    ldr w1, [x0]
+    sub w1, w1, #1
+    cmp w21, w1
+    b.ge print_array
+
+    // Initialize min_idx
+    mov w22, w21       // min_idx = i
+    add w23, w21, #1   // j = i + 1
+
+find_min:
+    // Check inner loop condition
+    adrp x0, size
+    add x0, x0, :lo12:size
+    ldr w1, [x0]
+    cmp w23, w1
+    b.ge swap_min
+
+    // Compare array[j] with array[min_idx]
+    adrp x0, array
+    add x0, x0, :lo12:array
+    ldr w24, [x0, w23, sxtw #2]    // array[j]
+    ldr w25, [x0, w22, sxtw #2]    // array[min_idx]
     
-    mov x3, x2                  // min_idx = i
-    add x4, x2, #1             // j = i + 1
-    
-inner_loop:
-    cmp x4, x1                  // j < size?
-    b.ge swap_elements
-    
-    // Comparar arr[j] con arr[min_idx]
-    ldr x5, [x0, x4, lsl #3]    // x5 = arr[j]
-    ldr x6, [x0, x3, lsl #3]    // x6 = arr[min_idx]
-    cmp x5, x6
-    b.ge skip_update
-    mov x3, x4                  // min_idx = j
-    
-skip_update:
-    add x4, x4, #1             // j++
-    b inner_loop
-    
-swap_elements:
-    cmp x2, x3                  // i != min_idx?
-    b.eq continue_outer
-    
-    // Intercambiar arr[i] y arr[min_idx]
-    ldr x5, [x0, x2, lsl #3]
-    ldr x6, [x0, x3, lsl #3]
-    str x6, [x0, x2, lsl #3]
-    str x5, [x0, x3, lsl #3]
-    
-continue_outer:
-    add x2, x2, #1             // i++
+    cmp w24, w25
+    b.ge next_j
+    mov w22, w23       // Update min_idx
+
+next_j:
+    add w23, w23, #1
+    b find_min
+
+swap_min:
+    // Check if swap needed
+    cmp w22, w21
+    b.eq next_i
+
+    // Perform swap
+    adrp x0, array
+    add x0, x0, :lo12:array
+    ldr w23, [x0, w21, sxtw #2]    // temp = array[i]
+    ldr w24, [x0, w22, sxtw #2]    // array[min_idx]
+    str w24, [x0, w21, sxtw #2]    // array[i] = array[min_idx]
+    str w23, [x0, w22, sxtw #2]    // array[min_idx] = temp
+
+next_i:
+    add w21, w21, #1
     b outer_loop
-    
-sort_end:
-    ldp x29, x30, [sp], #16
+
+print_array:
+    // Print sorted array message
+    adrp x0, output_msg
+    add x0, x0, :lo12:output_msg
+    bl printf
+
+    // Initialize print counter
+    mov w21, #0
+
+print_loop:
+    // Check print condition
+    adrp x0, size
+    add x0, x0, :lo12:size
+    ldr w1, [x0]
+    cmp w21, w1
+    b.ge print_newline
+
+    // Print number
+    adrp x0, print_format
+    add x0, x0, :lo12:print_format
+    adrp x2, array
+    add x2, x2, :lo12:array
+    ldr w1, [x2, w21, sxtw #2]
+    bl printf
+
+    add w21, w21, #1
+    b print_loop
+
+print_newline:
+    adrp x0, newline
+    add x0, x0, :lo12:newline
+    bl printf
+
+    // Restore link register and return
+    ldr lr, [sp], #16
+    mov w0, #0
     ret

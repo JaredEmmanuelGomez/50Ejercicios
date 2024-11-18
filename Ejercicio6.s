@@ -27,91 +27,61 @@ print("El valor ASCII del carácter es:", resultado)
 //Gómez Aguilar Jared Emmanuel
 //22210309
 .data
-    // Mensajes y formatos
-    prompt: .asciz "Ingrese un número: "
-    result: .asciz "El número convertido es: %d\n"
-    error_msg: .asciz "Error: Solo se permiten dígitos.\n"
-    formato_scan: .asciz "%s"
-    
-    //Almacenar la entrada
-    .align 4
-    buffer: .skip 6     // 5 dígitos + null terminator
-    
+    prompt:     .asciz "Enter a number as string: "
+    scanfmt:    .asciz "%s"
+    outfmt:     .asciz "Result: %d\n"
+    buffer:     .skip 100       // Buffer for input
+
 .text
-.global main
-.extern printf
-.extern scanf
+    .global main
+    .align 2
 
 main:
-    // Prólogo
-    stp x29, x30, [sp, -16]!
-    mov x29, sp
+    stp     x29, x30, [sp, -16]!    // Save frame pointer and link register
+    mov     x29, sp                  // Set up frame pointer
+
+    // Print prompt
+    adrp    x0, prompt
+    add     x0, x0, :lo12:prompt
+    bl      printf
+
+    // Read input
+    adrp    x0, scanfmt
+    add     x0, x0, :lo12:scanfmt
+    adrp    x1, buffer
+    add     x1, x1, :lo12:buffer
+    bl      scanf
+
+    // Initialize registers
+    mov     x19, #0                  // Result
+    adrp    x20, buffer             // Load input string address
+    add     x20, x20, :lo12:buffer
     
-    // Mostrar prompt
-    adrp x0, prompt
-    add x0, x0, :lo12:prompt
-    bl printf
+convert_loop:
+    ldrb    w21, [x20], #1          // Load byte and increment pointer
+    cbz     w21, done               // If null terminator, exit loop
     
-    // Leer entrada
-    adrp x0, formato_scan
-    add x0, x0, :lo12:formato_scan
-    adrp x1, buffer
-    add x1, x1, :lo12:buffer
-    bl scanf
+    sub     w21, w21, #'0'          // Convert ASCII to number
+    cmp     w21, #9                 // Check if valid digit
+    b.hi    done
     
-    // Inicializar resultado
-    mov x19, #0      // x19 será nuestro resultado
-    
-    // Preparar para procesar la cadena
-    adrp x20, buffer
-    add x20, x20, :lo12:buffer
-    
-proceso_loop:
-    // Cargar byte actual
-    ldrb w21, [x20]
-    
-    // Verificar si es fin de cadena
-    cmp w21, #0
-    beq fin_conversion
-    
-    // Verificar si es dígito (ASCII 48-57)
-    cmp w21, #48
-    blt error
-    cmp w21, #57
-    bgt error
-    
-    // Convertir ASCII a dígito
-    sub w21, w21, #48
-    
-    // Multiplicar resultado actual por 10 y sumar nuevo dígito
-    mov x22, #10
-    mul x19, x19, x22
-    add x19, x19, x21
-    
-    // Avanzar al siguiente carácter
-    add x20, x20, #1
-    b proceso_loop
-    
-error:
-    
-    adrp x0, error_msg
-    add x0, x0, :lo12:error_msg
-    bl printf
-    mov w0, #1
-    b fin
-    
-fin_conversion:
-    
-    adrp x0, result
-    add x0, x0, :lo12:result
-    mov x1, x19
-    bl printf
-    
-    mov w0, #0
-    
-fin:
-    ldp x29, x30, [sp], #16
+    mov     x22, #10
+    mul     x19, x19, x22           // result = result * 10
+    add     x19, x19, x21           // result = result + digit
+    b       convert_loop
+
+done:
+    // Print result
+    adrp    x0, outfmt
+    add     x0, x0, :lo12:outfmt
+    mov     x1, x19
+    bl      printf
+
+    // Exit
+    mov     w0, #0
+    ldp     x29, x30, [sp], #16
     ret
 
+.size main, .-main
 ASCIINEMA 
 https://asciinema.org/a/690320

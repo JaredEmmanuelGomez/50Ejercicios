@@ -19,73 +19,143 @@ def set_clear_toggle_bits(n, pos, action):
 
 // Gómez Aguilar Jared Emmanuel
 // 22210309
-.global main
+.data
+    // Mensajes para mostrar las operaciones
+    msg_original:  .ascii "Número original: "
+    len_orig = . - msg_original
+    
+    msg_set:       .ascii "\nDespués de establecer bit: "
+    len_set = . - msg_set
+    
+    msg_clear:     .ascii "\nDespués de borrar bit: "
+    len_clear = . - msg_clear
+    
+    msg_toggle:    .ascii "\nDespués de alternar bit: "
+    len_toggle = . - msg_toggle
+    
+    newline:       .ascii "\n"
+    
+    // Número para realizar las operaciones
+    numero: .quad 0x5A    // Valor inicial 01011010 en binario
+
 .text
+.global _start
 
-main:
-    // Guardamos el link register
-    stp     x29, x30, [sp, #-16]!
-    mov     x29, sp
-
-    // Inicializamos un número para manipular sus bits
-    mov     x19, #10         // x19 = 10 (1010 en binario)
-
-    // Imprimir valor original
-    adr     x0, msg1
-    mov     x1, x19
-    bl      printf
-
-    // ESTABLECER BIT (Usando OR)
-    // Establecemos el bit 1 (segundo bit)
-    // 1010 OR 0010 = 1010 (no cambia porque ya estaba en 1)
-    mov     x20, x19        // Copiamos el valor original
-    mov     x4, #2          // Creamos la máscara para el bit 1
-    orr     x20, x20, x4    // Establecer bit 1
+_start:
+    // Mostrar número original
+    mov x0, #1
+    adr x1, msg_original
+    mov x2, len_orig
+    mov x8, #64
+    svc #0
     
-    // Imprimir resultado después de establecer bit
-    adr     x0, msg2
-    mov     x1, x20
-    bl      printf
-
-    // BORRAR BIT (Usando AND con máscara invertida)
-    // Borramos el bit 1 (segundo bit)
-    mov     x21, x19        // Copiamos el valor original
-    mov     x4, #2          // Bit que queremos borrar
-    mvn     x4, x4          // Invertimos la máscara
-    and     x21, x21, x4    // Borrar bit 1
+    // Cargar y mostrar número original
+    adr x19, numero
+    ldr x20, [x19]        // x20 contendrá nuestro número de trabajo
+    mov x0, x20
+    bl print_binary
     
-    // Imprimir resultado después de borrar bit
-    adr     x0, msg3
-    mov     x1, x21
-    bl      printf
-
-    // ALTERNAR BIT (Usando XOR)
-    // Alternamos el bit 3 (cuarto bit)
-    // 1010 XOR 1000 = 0010
-    mov     x22, x19        // Copiamos el valor original
-    mov     x4, #8          // Creamos la máscara para el bit 3
-    eor     x22, x22, x4    // Alternar bit 3
+    // Establecer bit 3 (1 << 3 = 8)
+    mov x21, #1
+    lsl x21, x21, #3      // Desplazar 1 a la posición 3
+    orr x20, x20, x21     // OR para establecer el bit
     
-    // Imprimir resultado después de alternar bit
-    adr     x0, msg4
-    mov     x1, x22
-    bl      printf
+    // Mostrar resultado después de establecer
+    mov x0, #1
+    adr x1, msg_set
+    mov x2, len_set
+    mov x8, #64
+    svc #0
+    
+    mov x0, x20
+    bl print_binary
+    
+    // Borrar bit 5 (1 << 5 = 32)
+    mov x21, #1
+    lsl x21, x21, #5      // Desplazar 1 a la posición 5
+    mvn x21, x21          // Invertir bits
+    and x20, x20, x21     // AND para borrar el bit
+    
+    // Mostrar resultado después de borrar
+    mov x0, #1
+    adr x1, msg_clear
+    mov x2, len_clear
+    mov x8, #64
+    svc #0
+    
+    mov x0, x20
+    bl print_binary
+    
+    // Alternar bit 4 (1 << 4 = 16)
+    mov x21, #1
+    lsl x21, x21, #4      // Desplazar 1 a la posición 4
+    eor x20, x20, x21     // XOR para alternar el bit
+    
+    // Mostrar resultado después de alternar
+    mov x0, #1
+    adr x1, msg_toggle
+    mov x2, len_toggle
+    mov x8, #64
+    svc #0
+    
+    mov x0, x20
+    bl print_binary
+    
+    // Nueva línea final
+    mov x0, #1
+    adr x1, newline
+    mov x2, #1
+    mov x8, #64
+    svc #0
+    
+    // Salir del programa
+    mov x0, #0
+    mov x8, #93
+    svc #0
 
-    // Restauramos el stack y retornamos
-    ldp     x29, x30, [sp], #16
-    mov     w0, #0
+// Subrutina para imprimir un número en binario
+print_binary:
+    stp x29, x30, [sp, #-16]!
+    stp x19, x20, [sp, #-16]!
+    
+    mov x19, x0           // Guardar número a imprimir
+    mov x20, #8           // Contador de bits (imprimiremos 8 bits)
+    
+print_loop:
+    // Verificar el bit más significativo
+    mov x0, x19
+    and x0, x0, #0x80
+    cmp x0, #0
+    beq print_zero
+    
+print_one:
+    mov x0, #1            // stdout
+    adr x1, one_char
+    b print_bit
+    
+print_zero:
+    mov x0, #1            // stdout
+    adr x1, zero_char
+    
+print_bit:
+    mov x2, #1            // longitud 1 byte
+    mov x8, #64           // write syscall
+    svc #0
+    
+    // Desplazar número a la izquierda
+    lsl x19, x19, #1
+    
+    // Decrementar contador y continuar si no es cero
+    subs x20, x20, #1
+    bne print_loop
+    
+    ldp x19, x20, [sp], #16
+    ldp x29, x30, [sp], #16
     ret
 
-.section .rodata
-msg1:
-    .string "Valor original en decimal (binario 1010): %d\n"
-msg2:
-    .string "Después de establecer bit 1: %d\n"
-msg3:
-    .string "Después de borrar bit 1: %d\n"
-msg4:
-    .string "Después de alternar bit 3: %d\n"
-
+.data
+    one_char:  .ascii "1"
+    zero_char: .ascii "0"
 
 ASCIINEMA
 https://asciinema.org/a/688635

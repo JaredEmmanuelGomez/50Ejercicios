@@ -15,63 +15,70 @@ def invertir_cadena(cadena):
 //Alumno: Gómez Aguilar Jared Emmanuel 
 //Número de Control: 22210309 
 .data
-msg_prompt: .asciz "Ingresa una cadena de texto: " // Mensaje para solicitar la cadena
-msg_result: .asciz "La cadena invertida es: %s\n" // Mensaje para imprimir la cadena invertida
+    prompt:     .asciz "Enter a string: "
+    scanfmt:    .asciz "%s"
+    outfmt:     .asciz "Reversed: %s\n"
+    buffer:     .skip 100           // Buffer for input string
 
 .text
-.global main
+    .global main
+    .align 2
 
 main:
-// Guardar el puntero de marco y el enlace de retorno
-stp x29, x30, [sp, -16]! // Reservar espacio en la pila
-mov x29, sp // Establecer el puntero de marco
-sub sp, sp, #256 
+    stp     x29, x30, [sp, -16]!
+    mov     x29, sp
 
-// Solicitar la cadena de texto
-ldr x0, =msg_prompt // Cargar el mensaje para solicitar la cadena
-bl printf // Imprimir el mensaje
-ldr x0, =input_format // Cargar el formato para leer una cadena
-mov x1, sp // Dirección donde se guardará la cadena en la pila
-bl scanf // Leer la cadena desde el usuario
+    // Print prompt
+    adrp    x0, prompt
+    add     x0, x0, :lo12:prompt
+    bl      printf
 
-// Encontrar el final de la cadena (buscando el carácter nulo '\0')
-mov x2, sp // Dirección de la cadena
-find_end:
-ldrb w3, [x2] // Cargar el siguiente byte de la cadena
-cmp w3, #0 // Verificar si es el carácter nulo ('\0')
-beq reverse_string // Si es el final de la cadena, salir del bucle
-add x2, x2, #1 // Avanzar al siguiente carácter
-b find_end // Continuar buscando
+    // Read input
+    adrp    x0, scanfmt
+    add     x0, x0, :lo12:scanfmt
+    adrp    x1, buffer
+    add     x1, x1, :lo12:buffer
+    bl      scanf
 
-reverse_string:
-// x2 contiene la dirección del carácter nulo ('\0'), retrocedemos una posición
-sub x2, x2, #1 // Retroceder una posición, apuntar al último carácter válido
+    // Get string length
+    adrp    x19, buffer
+    add     x19, x19, :lo12:buffer   // Start of string
+    mov     x20, x19                 // Copy start address
 
-// Iniciar el proceso de invertir la cadena
-mov x3, sp // Dirección inicial de la cadena
+strlen_loop:
+    ldrb    w21, [x20], #1
+    cbnz    w21, strlen_loop
+    sub     x20, x20, x19           // Length in x20
+    sub     x20, x20, #2            // Adjust for null terminator
+
+    // Now reverse the string
+    mov     x21, x19                // Start pointer
+    add     x22, x19, x20          // End pointer
+
 reverse_loop:
-cmp x3, x2 // Comparar los punteros
-bge end_reverse // Si los punteros se cruzan, terminamos
-ldrb w4, [x3] // Cargar el carácter de la posición inicial
-ldrb w5, [x2] // Cargar el carácter de la posición final
-strb w5, [x3] // Colocar el carácter final en la posición inicial
-strb w4, [x2] // Colocar el carácter inicial en la posición final
-add x3, x3, #1 // Avanzar el puntero inicial
-sub x2, x2, #1 // Retroceder el puntero final
-b reverse_loop // Continuar invirtiendo
+    cmp     x21, x22
+    b.hs    done
+    
+    // Swap characters
+    ldrb    w23, [x21]
+    ldrb    w24, [x22]
+    strb    w24, [x21], #1
+    strb    w23, [x22], #-1
+    b       reverse_loop
 
-end_reverse:
-// Imprimir la cadena invertida
-ldr x0, =msg_result // Cargar el mensaje para mostrar el resultado
-mov x1, sp // Dirección de la cadena invertida
-bl printf // Imprimir la cadena invertida
+done:
+    // Print result
+    adrp    x0, outfmt
+    add     x0, x0, :lo12:outfmt
+    mov     x1, x19
+    bl      printf
 
-// Restaurar el puntero de pila y regresar
-add sp, sp, #256 // Restaurar el puntero de pila
-ldp x29, x30, [sp], 16 // Restaurar el puntero de marco y el enlace de retorno
-ret // Regresar del programa
+    // Exit
+    mov     w0, #0
+    ldp     x29, x30, [sp], #16
+    ret
 
-.data
-input_format: .asciz "%255s" // Formato para leer una cadena de hasta 255 caracteres
+.size main, .-main
 
 ASCIINEMA
+https://asciinema.org/a/690670

@@ -14,55 +14,95 @@ def suma_numeros_naturales(n):
 //Gomez Aguilar Jared Emmanuel
 //22210309
 .data
-    prompt:     .asciz "Enter N (number of natural numbers to sum): "
-    outfmt:     .asciz "Sum of first %ld numbers is: %ld\n"
-    scanfmt:    .asciz "%ld"
-    number:     .quad 0
+    prompt:     .asciz "Enter the number of natural numbers to sum: "
+    buffer:     .skip   20
+    result:     .skip   64      // Buffer for result
+    newline:    .asciz "\n"
 
 .text
-    .global main
-    .align 2
+.global _start
 
-main:
-    stp     x29, x30, [sp, -16]!
-    mov     x29, sp
-
+_start:
     // Print prompt
-    adrp    x0, prompt
-    add     x0, x0, :lo12:prompt
-    bl      printf
+    mov     x0, #1              // stdout
+    adr     x1, prompt
+    mov     x2, #47             // length of prompt
+    mov     x8, #64             // sys_write
+    svc     #0
 
     // Read input
-    adrp    x0, scanfmt
-    add     x0, x0, :lo12:scanfmt
-    adrp    x1, number
-    add     x1, x1, :lo12:number
-    bl      scanf
+    mov     x0, #0              // stdin
+    adr     x1, buffer
+    mov     x2, #20             // buffer size
+    mov     x8, #63             // sys_read
+    svc     #0
 
-    // Load number and initialize sum
-    adrp    x19, number
-    add     x19, x19, :lo12:number
-    ldr     x19, [x19]            // N value
-    mov     x20, #0               // Sum
-    mov     x21, #1               // Counter
+    // Convert ASCII to integer
+    adr     x1, buffer
+    mov     x2, #0              // result
+    mov     x3, #10             // multiplier
+convert_loop:
+    ldrb    w4, [x1]
+    cmp     w4, #'\n'
+    beq     convert_done
+    sub     w4, w4, #'0'
+    mul     x2, x2, x3
+    add     x2, x2, x4
+    add     x1, x1, #1
+    b       convert_loop
 
-sum_loop:
-    cmp     x21, x19
-    b.gt    print_result          // If counter > N, we're done
-    add     x20, x20, x21         // Add counter to sum
-    add     x21, x21, #1          // Increment counter
-    b       sum_loop
+convert_done:
+    // Calculate sum of first n natural numbers
+    // Using formula: n * (n + 1) / 2
+    add     x3, x2, #1          // n + 1
+    mul     x4, x2, x3          // n * (n + 1)
+    lsr     x4, x4, #1          // Divide by 2
 
-print_result:
+    // Convert result to ASCII
+    adr     x1, result
+    mov     x3, #10             // Divisor
+    mov     x5, #0              // Digit counter
+
+convert_to_ascii:
+    udiv    x6, x4, x3          // Divide by 10
+    msub    x7, x6, x3, x4      // Get remainder
+    add     x7, x7, #'0'        // Convert to ASCII
+    strb    w7, [x1, x5]        // Store digit
+    add     x5, x5, #1          // Increment counter
+    mov     x4, x6              // Update number
+    cbnz    x4, convert_to_ascii
+
+    // Reverse the string
+    mov     x6, #0              // Start index
+    sub     x7, x5, #1          // End index
+reverse_loop:
+    cmp     x6, x7
+    bhs     reverse_done
+    ldrb    w8, [x1, x6]
+    ldrb    w9, [x1, x7]
+    strb    w9, [x1, x6]
+    strb    w8, [x1, x7]
+    add     x6, x6, #1
+    sub     x7, x7, #1
+    b       reverse_loop
+
+reverse_done:
+    // Add newline
+    strb    w3, [x1, x5]
+    mov     w3, #'\n'
+    strb    w3, [x1, x5]
+
     // Print result
-    adrp    x0, outfmt
-    add     x0, x0, :lo12:outfmt
-    mov     x1, x19               // N value
-    mov     x2, x20               // Sum
-    bl      printf
+    mov     x0, #1              // stdout
+    adr     x1, result
+    add     x2, x5, #1          // Length including newline
+    mov     x8, #64             // sys_write
+    svc     #0
 
-    mov     w0, #0
-    ldp     x29, x30, [sp], #16
-    ret
+exit:
+    mov     x0, #0              // return 0
+    mov     x8, #93             // sys_exit
+    svc     #0
 
-.size main, .-main
+ASCIINEMA REC
+https://asciinema.org/a/690914

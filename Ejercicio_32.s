@@ -14,89 +14,141 @@ def bitwise_operations(a, b):
 
 // Gómez Aguilar Jared Emmanuek
 // 22210309
-// bit_operations.s
-.global _start
+.data
+    msg1:    .ascii "Primer número:  "
+    len1 = . - msg1
+    msg2:    .ascii "\nSegundo número: "
+    len2 = . - msg2
+    msg_and: .ascii "\nOperación AND: "
+    len_and = . - msg_and
+    msg_or:  .ascii "\nOperación OR:  "
+    len_or = . - msg_or
+    msg_xor: .ascii "\nOperación XOR: "
+    len_xor = . - msg_xor
+    newline: .ascii "\n"
+    
+    // Números de ejemplo (puedes cambiarlos)
+    num1:    .quad 12    // 1100 en binario
+    num2:    .quad 10    // 1010 en binario
 
 .text
+.global _start
+
 _start:
-    mov x0, #42
-    mov x1, #27
-    bl bitwise_operations
+    // Mostrar mensaje para primer número
+    mov x0, #1
+    adr x1, msg1
+    mov x2, len1
+    mov x8, #64
+    svc #0
     
-    mov x8, #93
+    // Mostrar primer número
+    adr x0, num1
+    ldr x0, [x0]
+    bl imprimir_binario
+    
+    // Mostrar mensaje para segundo número
+    mov x0, #1
+    adr x1, msg2
+    mov x2, len2
+    mov x8, #64
+    svc #0
+    
+    // Mostrar segundo número
+    adr x0, num2
+    ldr x0, [x0]
+    bl imprimir_binario
+    
+    // Realizar operación AND
+    mov x0, #1
+    adr x1, msg_and
+    mov x2, len_and
+    mov x8, #64
+    svc #0
+    
+    adr x0, num1
+    ldr x0, [x0]
+    adr x1, num2
+    ldr x1, [x1]
+    and x0, x0, x1
+    bl imprimir_binario
+    
+    // Realizar operación OR
+    mov x0, #1
+    adr x1, msg_or
+    mov x2, len_or
+    mov x8, #64
+    svc #0
+    
+    adr x0, num1
+    ldr x0, [x0]
+    adr x1, num2
+    ldr x1, [x1]
+    orr x0, x0, x1
+    bl imprimir_binario
+    
+    // Realizar operación XOR
+    mov x0, #1
+    adr x1, msg_xor
+    mov x2, len_xor
+    mov x8, #64
+    svc #0
+    
+    adr x0, num1
+    ldr x0, [x0]
+    adr x1, num2
+    ldr x1, [x1]
+    eor x0, x0, x1
+    bl imprimir_binario
+    
+    // Nueva línea final
+    mov x0, #1
+    adr x1, newline
+    mov x2, #1
+    mov x8, #64
+    svc #0
+    
+    // Salir del programa
     mov x0, #0
+    mov x8, #93
     svc #0
 
-bitwise_operations:
-    // x0, x1: números a operar
+imprimir_binario:
+    // x0 = número a imprimir
     stp x29, x30, [sp, #-16]!
-    mov x29, sp
+    stp x19, x20, [sp, #-16]!
     
-    // AND
-    and x2, x0, x1
+    mov x19, x0           // Guardar número
+    mov x20, #63          // Contador de bits (64-1)
     
-    // OR
-    orr x3, x0, x1
+    // Reservar espacio en el stack para el string binario
+    sub sp, sp, #70       // 64 bits + algunos extras
+    mov x2, sp           // Puntero al buffer
     
-    // XOR
-    eor x4, x0, x1
+print_bits:
+    lsr x1, x19, x20     // Desplazar a la derecha
+    and x1, x1, #1       // Obtener el bit menos significativo
+    add w1, w1, #'0'     // Convertir a ASCII
+    strb w1, [x2]        // Guardar el carácter
+    add x2, x2, #1       // Siguiente posición
     
-    // NOT (complemento a uno)
-    mvn x5, x0
+    sub x20, x20, #1     // Decrementar contador
+    cmp x20, #-1         // Verificar si terminamos
+    bge print_bits
     
-    // Desplazamiento izquierda
-    lsl x6, x0, #2
+    // Imprimir el número binario
+    mov x0, #1           // stdout
+    mov x1, sp           // buffer
+    mov x2, #64          // longitud
+    mov x8, #64          // write syscall
+    svc #0
     
-    // Desplazamiento derecha
-    lsr x7, x0, #2
-    
-    // Desplazamiento aritmético derecha
-    asr x8, x0, #2
-    
-    // Rotación derecha
-    ror x9, x0, #2
-    
+    // Restaurar stack y registros
+    add sp, sp, #70
+    ldp x19, x20, [sp], #16
     ldp x29, x30, [sp], #16
     ret
 
-count_set_bits:
-    // x0: número a contar bits
-    mov x1, #0              // contador
-    
-count_loop:
-    cbz x0, count_end      // Si el número es 0, terminar
-    
-    // Técnica de Brian Kernighan
-    sub x2, x0, #1         // n-1
-    and x0, x0, x2         // n = n & (n-1)
-    add x1, x1, #1         // incrementar contador
-    b count_loop
-    
-count_end:
-    mov x0, x1             // retornar contador
-    ret
 
-set_bit:
-    // x0: número
-    // x1: posición
-    mov x2, #1
-    lsl x2, x2, x1
-    orr x0, x0, x2
-    ret
-
-clear_bit:
-    // x0: número
-    // x1: posición
-    mov x2, #1
-    lsl x2, x2, x1
-    mvn x2, x2
-    and x0, x0, x2
-    ret
-
-toggle_bit:
-    // x0: número
-    // x1: posición
-    mov x2, #1
-    lsl x2, x2, x1
-    eor x0, x0, x2
-    ret
+ASCIINEMA REC
+https://asciinema.org/a/690732

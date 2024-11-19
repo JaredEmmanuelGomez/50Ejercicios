@@ -110,3 +110,6 @@ msg1: .ascii "Calculando MCD(48,36):\n"
 msg2: .ascii "El resultado es: "
 newline: .ascii "\n"
 .align 4               // Alinear los datos
+
+ASCIINEMA REC
+https://asciinema.org/a/690852

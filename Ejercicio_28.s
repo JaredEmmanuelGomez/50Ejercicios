@@ -220,3 +220,6 @@ exit:
     ldr lr, [sp], #16
     mov w0, #0
     ret
+
+ASCIINEMA REC
+https://asciinema.org/a/690713

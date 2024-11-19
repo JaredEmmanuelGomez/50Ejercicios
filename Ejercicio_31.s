@@ -17,7 +17,6 @@ def count_vowels_consonants(string):
 
 // Gómez Aguilar Jared Emmanuel
 // 22210309
-// count_vowels_consonants.s
 .data
     msg1:    .ascii "Texto: "
     len1 = . - msg1

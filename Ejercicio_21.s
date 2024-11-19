@@ -18,69 +18,136 @@ def fibonacci(n):
 // Gómez Aguilar Jared Emmanuel
 // 22210309
 .data
-    prompt:     .asciz "Enter number of Fibonacci terms to generate: "
-    outfmt:     .asciz "Term %d: %ld\n"
-    scanfmt:    .asciz "%ld"
-    number:     .quad 0
-
+    newline: .ascii "\n"
+    space:   .ascii " "
+    buffer:  .skip 20
+    
 .text
-    .global main
-    .align 2
+.global _start
 
-main:
-    stp     x29, x30, [sp, -16]!
-    mov     x29, sp
+_start:
+    // x19 = primer número
+    // x20 = segundo número
+    // x21 = contador
+    // x22 = límite
+    mov x19, #0         // F(0)
+    mov x20, #1         // F(1)
+    mov x21, #0         // contador = 0
+    mov x22, #10        // límite = 10 números
 
-    // Print prompt
-    adrp    x0, prompt
-    add     x0, x0, :lo12:prompt
-    bl      printf
+print_loop:
+    // Guardamos los registros que vamos a usar
+    stp x19, x20, [sp, #-16]!
+    stp x21, x22, [sp, #-16]!
 
-    // Read input
-    adrp    x0, scanfmt
-    add     x0, x0, :lo12:scanfmt
-    adrp    x1, number
-    add     x1, x1, :lo12:number
-    bl      scanf
+// Convertimos x19 a string
+mov x0, x19
+bl int_to_string
 
-    // Initialize Fibonacci
-    mov     x19, #0              // First number
-    mov     x20, #1              // Second number
-    mov     x21, #1              // Counter
-    adrp    x22, number
-    add     x22, x22, :lo12:number
-    ldr     x22, [x22]          // Number of terms
+// Imprimimos el número
+bl print_string
 
-    // Print first term if n > 0
-    cmp     x22, #0
-    b.le    exit
-    adrp    x0, outfmt
-    add     x0, x0, :lo12:outfmt
-    mov     x1, x21
-    mov     x2, x19
-    bl      printf
+// Imprimimos espacio
+ldr x0, =space
+mov x1, #1
+bl print_text
 
-fib_loop:
-    add     x21, x21, #1         // Increment counter
-    cmp     x21, x22
-    b.gt    exit                // If counter > n, exit
+// Restauramos registros
+ldp x21, x22, [sp], #16
+ldp x19, x20, [sp], #16
 
-    // Print current term
-    adrp    x0, outfmt
-    add     x0, x0, :lo12:outfmt
-    mov     x1, x21
-    mov     x2, x20
-    bl      printf
+// Calculamos siguiente número Fibonacci
+mov x23, x19        // Guardamos F(n)
+mov x19, x20        // F(n) = F(n+1)
+add x20, x23, x20   // F(n+1) = F(n) + F(n+1)
 
-    // Calculate next term
-    add     x23, x19, x20        // Next = first + second
-    mov     x19, x20             // First = second
-    mov     x20, x23             // Second = next
-    b       fib_loop
+// Incrementamos contador y verificamos si terminamos
+add x21, x21, #1
+cmp x21, x22
+b.lt print_loop
 
-exit:
-    mov     w0, #0
-    ldp     x29, x30, [sp], #16
+// Imprimimos nueva línea al final
+ldr x0, =newline
+mov x1, #1
+bl print_text
+
+// Terminamos el programa
+mov x0, #0
+mov x8, #93
+svc #0
+
+// Función para convertir entero a string
+int_to_string:
+    // Preparamos buffer
+    ldr x1, =buffer
+    mov x2, #0          // longitud
+
+// Si el número es 0, manejamos caso especial
+cmp x0, #0
+b.ne convert_loop
+mov w3, #'0'
+strb w3, [x1]
+mov x0, x1
+mov x1, #1
+ret
+
+convert_loop:
+    // Dividimos por 10
+    mov x3, #10
+    udiv x4, x0, x3     // x4 = x0 / 10
+    msub x5, x4, x3, x0 // x5 = remainder
+
+// Convertimos dígito a ASCII y guardamos
+add x5, x5, #'0'
+strb w5, [x1, x2]
+
+// Incrementamos longitud
+add x2, x2, #1
+
+// Actualizamos número
+mov x0, x4
+
+// Si quedan dígitos, continuamos
+cbnz x0, convert_loop
+
+// Invertimos string
+mov x3, #0          // inicio
+sub x4, x2, #1      // fin
+
+reverse_loop:
+    cmp x3, x4
+    b.ge reverse_done
+
+// Intercambiamos caracteres
+ldrb w5, [x1, x3]
+ldrb w6, [x1, x4]
+strb w6, [x1, x3]
+strb w5, [x1, x4]
+
+add x3, x3, #1
+sub x4, x4, #1
+b reverse_loop
+
+reverse_done:
+    mov x0, x1          // retornamos puntero al string
+    mov x1, x2          // retornamos longitud
     ret
 
-.size main, .-main
+// Función para imprimir texto
+print_text:
+    mov x2, x1          // longitud
+    mov x1, x0          // buffer
+    mov x0, #1          // stdout
+    mov x8, #64         // syscall write
+    svc #0
+    ret
+
+// Función para imprimir string
+print_string:
+    mov x2, x1          // longitud
+    mov x1, x0          // buffer
+    mov x0, #1          // stdout
+    mov x8, #64         // syscall write
+    svc #0
+    ret
+

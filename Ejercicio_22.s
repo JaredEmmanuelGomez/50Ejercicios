@@ -209,3 +209,6 @@ reverse_done:
     mov x2, x0             // Guardar longitud para syscall write
     ret
 
+
+ASCIINEMA REC
+https://asciinema.org/a/690690

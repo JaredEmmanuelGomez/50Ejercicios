@@ -39,187 +39,261 @@ def merge_sort(arr):
 // Gómez Aguilar Jared Emmanuel
 // 22210309
 .data
-    input_size: .asciz "Enter array size: "
-    input_num: .asciz "Enter number %d: "
-    output_msg: .asciz "Sorted array: "
-    scan_format: .asciz "%d"
-    print_format: .asciz "%d "
-    newline: .asciz "\n"
-
-.bss
-    .align 4
-    array: .skip 400    // Space for up to 100 integers
-    temp: .skip 400     // Temporary array for merging
-    size: .skip 4       // Variable to store array size
+    msg1:    .ascii "Los elementos del arreglo son: 45, 23, 78, 12, 67, 34, 89, 9\n"
+    len1 = . - msg1
+    msgOrd:  .ascii "El arreglo ordenado es: "
+    lenOrd = . - msgOrd
+    array:   .quad 45, 23, 78, 12, 67, 34, 89, 9
+    temp:    .skip 64         // Array temporal para mezcla (8 elementos * 8 bytes)
+    buffer:  .skip 20        // Buffer para convertir número a string
+    space:   .ascii " "
+    newline: .ascii "\n"
 
 .text
-.global main
-main:
-    // Save registers
-    stp x29, x30, [sp, -16]!
-    mov x29, sp
+.global _start
 
-    // Print prompt for array size
-    adrp x0, input_size
-    add x0, x0, :lo12:input_size
-    bl printf
+_start:
+    // Mostrar los elementos del arreglo original
+    mov x0, #1              // stdout
+    ldr x1, =msg1          // mensaje
+    mov x2, len1           // longitud
+    mov x8, #64            // syscall write
+    svc #0
 
-    // Read array size
-    adrp x0, scan_format
-    add x0, x0, :lo12:scan_format
-    adrp x1, size
-    add x1, x1, :lo12:size
-    bl scanf
+    // Inicializar para ordenamiento por mezcla
+    ldr x0, =array         // Dirección base del arreglo
+    mov x1, #0             // Inicio del rango (left)
+    mov x2, #7             // Fin del rango (right)
+    
+    // Llamar a la función de ordenamiento por mezcla
+    bl merge_sort
 
-    // Initialize counter for array input
-    mov w21, #0
+    // Mostrar mensaje "El arreglo ordenado es: "
+    mov x0, #1
+    ldr x1, =msgOrd
+    mov x2, lenOrd
+    mov x8, #64
+    svc #0
 
-input_loop:
-    // Check if we've input all numbers
-    adrp x0, size
-    add x0, x0, :lo12:size
-    ldr w1, [x0]
-    cmp w21, w1
-    b.ge start_sort
+    // Mostrar el arreglo ordenado
+    ldr x0, =array
+    mov x1, #8
+    bl print_array
 
-    // Print prompt for number
-    adrp x0, input_num
-    add x0, x0, :lo12:input_num
-    mov w1, w21
-    bl printf
+    // Salir del programa
+    mov x0, #0
+    mov x8, #93
+    svc #0
 
-    // Read number
-    adrp x0, scan_format
-    add x0, x0, :lo12:scan_format
-    adrp x1, array
-    add x1, x1, :lo12:array
-    add x1, x1, w21, lsl #2
-    bl scanf
-
-    // Increment counter
-    add w21, w21, #1
-    b input_loop
-
-start_sort:
-    // Call mergesort with initial parameters
-    mov w0, #0              // left = 0
-    adrp x1, size
-    add x1, x1, :lo12:size
-    ldr w1, [x1]
-    sub w1, w1, #1         // right = size - 1
-    bl mergesort
-
-    // Print sorted array
-    adrp x0, output_msg
-    add x0, x0, :lo12:output_msg
-    bl printf
-
-    mov w21, #0            // Initialize print counter
-
-print_loop:
-    // Check print condition
-    adrp x0, size
-    add x0, x0, :lo12:size
-    ldr w1, [x0]
-    cmp w21, w1
-    b.ge print_newline
-
-    // Print number
-    adrp x0, print_format
-    add x0, x0, :lo12:print_format
-    adrp x2, array
-    add x2, x2, :lo12:array
-    ldr w1, [x2, w21, sxtw #2]
-    bl printf
-
-    add w21, w21, #1
-    b print_loop
-
-print_newline:
-    adrp x0, newline
-    add x0, x0, :lo12:newline
-    bl printf
-
-    // Restore registers and return
-    ldp x29, x30, [sp], #16
-    mov w0, #0
-    ret
-
-// Merge sort function
-mergesort:
-    // Save registers
-    stp x29, x30, [sp, -32]!
+merge_sort:
+    // Guardar registros
+    stp x29, x30, [sp, #-32]!
     stp x19, x20, [sp, #16]
     mov x29, sp
-
-    // Save parameters
-    mov w19, w0            // left
-    mov w20, w1            // right
-
-    // Check if more than one element
-    cmp w19, w20
-    b.ge mergesort_end
-
-    // Calculate middle point
-    add w21, w19, w20
-    lsr w21, w21, #1       // mid = (left + right)/2
-
-    // Sort left half
-    mov w0, w19
-    mov w1, w21
-    bl mergesort
-
-    // Sort right half
-    add w0, w21, #1
-    mov w1, w20
-    bl mergesort
-
-    // Merge the sorted halves
-    mov w0, w19            // left
-    mov w1, w21            // mid
-    mov w2, w20            // right
+    
+    // Guardar parámetros
+    mov x19, x0            // Dirección del array
+    mov x20, x2            // right
+    
+    // Verificar si hay más de un elemento
+    cmp x1, x2            // Comparar left con right
+    bge merge_sort_end    // Si left >= right, terminar
+    
+    // Calcular punto medio
+    add x3, x1, x2        // x3 = left + right
+    lsr x3, x3, #1        // x3 = (left + right) / 2
+    
+    // Guardar parámetros para llamadas recursivas
+    stp x1, x2, [sp, #-16]!  // Guardar left y right
+    stp x3, x30, [sp, #-16]! // Guardar mid y link register
+    
+    // Ordenar primera mitad
+    mov x2, x3            // right = mid
+    bl merge_sort
+    
+    // Ordenar segunda mitad
+    ldp x3, x30, [sp], #16   // Restaurar mid y link register
+    ldp x1, x2, [sp], #16    // Restaurar left y right
+    add x1, x3, #1        // left = mid + 1
+    bl merge_sort
+    
+    // Mezclar las mitades ordenadas
+    mov x0, x19           // Restaurar dirección del array
+    mov x2, x20           // Restaurar right original
     bl merge
 
-mergesort_end:
-    // Restore registers and return
+merge_sort_end:
+    // Restaurar registros
     ldp x19, x20, [sp, #16]
     ldp x29, x30, [sp], #32
     ret
 
-// Merge function
 merge:
-    // Save registers
-    stp x29, x30, [sp, -48]!
+    // Guardar registros
+    stp x29, x30, [sp, #-48]!
     stp x19, x20, [sp, #16]
     stp x21, x22, [sp, #32]
     mov x29, sp
-
-    // Save parameters
-    mov w19, w0            // left
-    mov w20, w1            // mid
-    mov w21, w2            // right
-
-    // Copy to temp array
-    mov w22, w19           // i = left
-copy_loop:
-    cmp w22, w21
-    b.gt merge_arrays
-
-    adrp x0, array
-    add x0, x0, :lo12:array
-    adrp x1, temp
-    add x1, x1, :lo12:temp
     
-    ldr w23, [x0, w22, sxtw #2]
-    str w23, [x1, w22, sxtw #2]
-
-    add w22, w22, #1
-    b copy_loop
-
-merge_arrays:
-    mov w22, w19           // k = left
-    mov w23, w19           // i = left
-    add w24, w20, #1       // j = mid + 1
-
+    // Guardar parámetros
+    mov x19, x0           // Dirección del array
+    mov x20, x1           // left
+    mov x21, x3           // mid
+    mov x22, x2           // right
+    
+    // Copiar elementos al array temporal
+    ldr x0, =temp
+    mov x1, x19
+    mov x2, x20           // left
+    mov x3, x22           // right
+    bl copy_to_temp
+    
+    // Inicializar índices
+    mov x4, x20           // i = left
+    mov x5, x20           // j = left
+    add x6, x21, #1       // k = mid + 1
+    
 merge_loop:
-    cmp w
+    cmp x5, x21          // if (j > mid)
+    bgt copy_remaining_right
+    
+    cmp x6, x22          // if (k > right)
+    bgt copy_remaining_left
+    
+    // Cargar y comparar elementos
+    ldr x7, =temp
+    ldr x8, [x7, x5, lsl #3]  // temp[j]
+    ldr x9, [x7, x6, lsl #3]  // temp[k]
+    
+    cmp x8, x9
+    bgt copy_right
+    
+copy_left:
+    str x8, [x19, x4, lsl #3] // array[i] = temp[j]
+    add x5, x5, #1            // j++
+    b next_merge
+    
+copy_right:
+    str x9, [x19, x4, lsl #3] // array[i] = temp[k]
+    add x6, x6, #1            // k++
+    
+next_merge:
+    add x4, x4, #1            // i++
+    cmp x4, x22               // if (i <= right)
+    ble merge_loop
+    b merge_end
+
+copy_remaining_left:
+    cmp x5, x21
+    bgt merge_end
+    ldr x7, =temp
+    ldr x8, [x7, x5, lsl #3]
+    str x8, [x19, x4, lsl #3]
+    add x4, x4, #1
+    add x5, x5, #1
+    b copy_remaining_left
+
+copy_remaining_right:
+    cmp x6, x22
+    bgt merge_end
+    ldr x7, =temp
+    ldr x8, [x7, x6, lsl #3]
+    str x8, [x19, x4, lsl #3]
+    add x4, x4, #1
+    add x6, x6, #1
+    b copy_remaining_right
+
+merge_end:
+    ldp x21, x22, [sp, #32]
+    ldp x19, x20, [sp, #16]
+    ldp x29, x30, [sp], #48
+    ret
+
+copy_to_temp:
+    // Copiar elementos al array temporal
+    mov x4, x2           // i = left
+copy_loop:
+    cmp x4, x3          // if (i > right)
+    bgt copy_end
+    ldr x5, [x1, x4, lsl #3]  // array[i]
+    str x5, [x0, x4, lsl #3]  // temp[i] = array[i]
+    add x4, x4, #1
+    b copy_loop
+copy_end:
+    ret
+
+print_array:
+    // Guardar registros
+    stp x29, x30, [sp, #-16]!
+    mov x29, sp
+    
+    mov x19, x0                // Guardar dirección del array
+    mov x20, x1                // Guardar tamaño
+    mov x21, #0                // Índice actual
+
+print_loop:
+    cmp x21, x20
+    bge print_end
+    
+    // Convertir número actual a string
+    ldr x0, [x19, x21, lsl #3]
+    ldr x1, =buffer
+    bl numero_a_string
+    
+    // Imprimir número
+    mov x0, #1
+    ldr x1, =buffer
+    mov x8, #64
+    svc #0
+    
+    // Imprimir espacio
+    mov x0, #1
+    ldr x1, =space
+    mov x2, #1
+    mov x8, #64
+    svc #0
+    
+    add x21, x21, #1
+    b print_loop
+
+print_end:
+    // Imprimir nueva línea
+    mov x0, #1
+    ldr x1, =newline
+    mov x2, #1
+    mov x8, #64
+    svc #0
+    
+    ldp x29, x30, [sp], #16
+    ret
+
+numero_a_string:
+    // x0 = número a convertir
+    // x1 = dirección del buffer
+    mov x2, #10            // Divisor
+    mov x3, x1             // Guardar inicio del buffer
+    
+convert_loop:
+    udiv x4, x0, x2        // x4 = x0 / 10
+    msub x5, x4, x2, x0    // x5 = x0 - (x4 * 10) = residuo
+    add x5, x5, #'0'       // Convertir a ASCII
+    strb w5, [x1], #1      // Guardar dígito y avanzar
+    mov x0, x4             // Preparar para siguiente división
+    cbnz x0, convert_loop  // Continuar si el cociente no es cero
+
+    // Invertir los caracteres
+    mov x4, x3             // x4 = inicio
+    sub x5, x1, #1         // x5 = fin
+reverse_loop:
+    cmp x4, x5
+    bge reverse_done
+    ldrb w6, [x4]
+    ldrb w7, [x5]
+    strb w7, [x4], #1
+    strb w6, [x5], #-1
+    b reverse_loop
+
+reverse_done:
+    sub x0, x1, x3         // Calcular longitud
+    mov x2, x0             // Guardar longitud para syscall write
+    ret

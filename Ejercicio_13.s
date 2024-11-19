@@ -15,59 +15,76 @@ def decimal_a_binario(decimal):
 //Gómez Aguilar Jared Emmanuel
 //22210309
 .data
-    prompt:     .asciz "Enter a decimal number: "
-    outfmt:     .asciz "Binary: %s\n"
-    scanfmt:    .asciz "%ld"
-    number:     .quad 0
-    buffer:     .skip 65            // Buffer for binary result (64 bits + null)
+    prompt:     .string "Enter a decimal number: "
+    prompt_len: .quad   . - prompt
+    buffer:     .skip   20
+    result:     .skip   33          // 32 bits + newline
+    newline:    .string "\n"
 
 .text
-    .global main
-    .align 2
+.global _start
 
-main:
-    stp     x29, x30, [sp, -16]!
-    mov     x29, sp
-
+_start:
     // Print prompt
-    adrp    x0, prompt
-    add     x0, x0, :lo12:prompt
-    bl      printf
+    mov     x0, #1              // stdout
+    adr     x1, prompt          // message to print
+    ldr     x2, =prompt_len     // message length
+    mov     x8, #64             // sys_write
+    svc     #0
 
     // Read input
-    adrp    x0, scanfmt
-    add     x0, x0, :lo12:scanfmt
-    adrp    x1, number
-    add     x1, x1, :lo12:number
-    bl      scanf
+    mov     x0, #0              // stdin
+    adr     x1, buffer          // buffer address
+    mov     x2, #20             // buffer size
+    mov     x8, #63             // sys_read
+    svc     #0
 
-    // Load number and prepare buffer
-    adrp    x19, number
-    add     x19, x19, :lo12:number
-    ldr     x19, [x19]            // Number to convert
-    
-    adrp    x20, buffer
-    add     x20, x20, :lo12:buffer
-    add     x20, x20, #64         // Go to end of buffer
-    mov     w21, #0
-    strb    w21, [x20]            // Null terminator
-    sub     x20, x20, #1
+    // Convert ASCII to integer
+    adr     x1, buffer          // buffer address
+    mov     x2, #0              // result
+    mov     x3, #10             // multiplier
 
 convert_loop:
-    and     x21, x19, #1          // Get least significant bit
-    add     w21, w21, #'0'        // Convert to ASCII
-    strb    w21, [x20], #-1       // Store digit
-    lsr     x19, x19, #1          // Shift right
-    cbnz    x19, convert_loop     // Continue if number not zero
+    ldrb    w4, [x1]           // load character
+    cmp     w4, #'\n'          // check for newline
+    beq     convert_done
+    sub     w4, w4, #'0'       // convert to number
+    mul     x2, x2, x3         // multiply by 10
+    add     x2, x2, x4         // add digit
+    add     x1, x1, #1         // next character
+    b       convert_loop
+
+convert_done:
+    // Convert to binary string
+    adr     x1, result         // result buffer
+    mov     x3, #32            // counter
+
+binary_loop:
+    sub     x3, x3, #1         // decrease counter
+    lsr     x4, x2, x3         // shift right
+    and     x4, x4, #1         // get last bit
+    add     x4, x4, #'0'       // convert to ASCII
+    strb    w4, [x1]           // store character
+    add     x1, x1, #1         // next position
+    cmp     x3, #0             // check if done
+    bne     binary_loop
+
+    // Add newline
+    mov     w4, #'\n'
+    strb    w4, [x1]
 
     // Print result
-    adrp    x0, outfmt
-    add     x0, x0, :lo12:outfmt
-    add     x1, x20, #1           // Point to start of string
-    bl      printf
+    mov     x0, #1             // stdout
+    adr     x1, result         // result buffer
+    mov     x2, #33            // length (32 + newline)
+    mov     x8, #64            // sys_write
+    svc     #0
 
-    mov     w0, #0
-    ldp     x29, x30, [sp], #16
-    ret
+exit:
+    mov     x0, #0             // return 0
+    mov     x8, #93            // sys_exit
+    svc     #0
 
-.size main, .-main
+    
+ASCIINEMA REC
+https://asciinema.org/a/690687

@@ -168,3 +168,6 @@ fin_potencia:
     mov     x0, x2                    // Retornar resultado
     ldp     x29, x30, [sp], #16
     ret
+
+ASCIINEMA REC
+https://asciinema.org/a/690883

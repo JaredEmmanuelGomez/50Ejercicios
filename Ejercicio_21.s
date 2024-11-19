@@ -151,3 +151,5 @@ print_string:
     svc #0
     ret
 
+ASCIINEMA REC
+https://asciinema.org/a/690689

@@ -18,128 +18,191 @@ def count_vowels_consonants(string):
 // Gómez Aguilar Jared Emmanuel
 // 22210309
 // count_vowels_consonants.s
+.data
+    msg1:    .ascii "Texto: "
+    len1 = . - msg1
+    msg2:    .ascii "\nNúmero de vocales: "
+    len2 = . - msg2
+    msg3:    .ascii "\nNúmero de consonantes: "
+    len3 = . - msg3
+    texto:   .ascii "Hola Mundo!"    // Texto de ejemplo
+    len_texto = . - texto
+    buffer:  .skip 20                // Buffer para números
+    newline: .ascii "\n"
+
+.text
 .global _start
 
-.data
-    text:       .ascii  "Hello World"     // Texto de ejemplo
-    text_len:   .quad   11               // Longitud del texto
-    vowels:     .ascii  "aeiouAEIOU"     // Lista de vocales
-    vowels_len: .quad   10               // Longitud de la lista de vocales
-    v_count:    .quad   0                // Contador de vocales
-    c_count:    .quad   0                // Contador de consonantes
-    
-.text
 _start:
-    ldr x0, =text
-    ldr x1, =text_len
-    ldr x1, [x1]
-    bl count_vowels_consonants
+    // Mostrar mensaje inicial
+    mov x0, #1
+    adr x1, msg1
+    mov x2, len1
+    mov x8, #64
+    svc #0
     
-    mov x8, #93            // exit syscall
-    mov x0, #0
+    // Mostrar texto
+    mov x0, #1
+    adr x1, texto
+    mov x2, len_texto
+    mov x8, #64
     svc #0
 
-count_vowels_consonants:
-    // x0: dirección del texto
-    // x1: longitud del texto
-    stp x29, x30, [sp, #-32]!
-    stp x19, x20, [sp, #16]
-    mov x29, sp
+    // Inicializar contadores
+    mov x19, #0          // vocales
+    mov x20, #0          // consonantes
     
-    mov x19, #0            // vowel_count = 0
-    mov x20, #0            // consonant_count = 0
-    mov x2, #0             // i = 0
-    
-char_loop:
-    cmp x2, x1
-    b.ge count_end
+    // Preparar para procesar el texto
+    adr x21, texto       // dirección del texto
+    mov x22, #0          // índice
+
+procesar_texto:
+    cmp x22, len_texto
+    beq mostrar_resultados
     
     // Cargar carácter actual
-    ldrb w3, [x0, x2]
+    ldrb w23, [x21, x22]
     
-    // Verificar si es letra
-    bl is_letter
-    cbz x0, next_char
+    // Convertir mayúsculas a minúsculas
+    mov w24, w23
+    cmp w24, #'A'
+    blt no_letra
+    cmp w24, #'Z'
+    bgt check_minuscula
+    add w24, w24, #32    // Convertir a minúscula
+    b check_vocal
     
-    // Verificar si es vocal
-    mov x0, x3
-    bl is_vowel
-    cbnz x0, increment_vowel
+check_minuscula:
+    cmp w24, #'a'
+    blt no_letra
+    cmp w24, #'z'
+    bgt no_letra
     
-    // Si no es vocal pero es letra, es consonante
-    add x20, x20, #1
-    b next_char
+check_vocal:
+    // Comprobar si es vocal
+    cmp w24, #'a'
+    beq es_vocal
+    cmp w24, #'e'
+    beq es_vocal
+    cmp w24, #'i'
+    beq es_vocal
+    cmp w24, #'o'
+    beq es_vocal
+    cmp w24, #'u'
+    beq es_vocal
     
-increment_vowel:
-    add x19, x19, #1
+    // Si llegamos aquí y es letra, es consonante
+    cmp w24, #'a'
+    blt no_letra
+    cmp w24, #'z'
+    bgt no_letra
+    add x20, x20, #1     // Incrementar consonantes
+    b siguiente_caracter
     
-next_char:
-    add x2, x2, #1
-    b char_loop
+es_vocal:
+    add x19, x19, #1     // Incrementar vocales
+    b siguiente_caracter
     
-count_end:
-    // Guardar resultados
-    ldr x0, =v_count
-    str x19, [x0]
-    ldr x0, =c_count
-    str x20, [x0]
+no_letra:
+    // No hacer nada, pasar al siguiente carácter
     
-    ldp x19, x20, [sp, #16]
-    ldp x29, x30, [sp], #32
-    ret
+siguiente_caracter:
+    add x22, x22, #1
+    b procesar_texto
 
-is_letter:
-    // x3: carácter a verificar
-    // Retorna: x0 = 1 si es letra, 0 si no
-    
-    // Verificar si está en el rango 'A'-'Z'
-    cmp w3, #'A'
-    b.lt not_letter
-    cmp w3, #'Z'
-    b.le is_letter_true
-    
-    // Verificar si está en el rango 'a'-'z'
-    cmp w3, #'a'
-    b.lt not_letter
-    cmp w3, #'z'
-    b.le is_letter_true
-    
-not_letter:
-    mov x0, #0
-    ret
-    
-is_letter_true:
+mostrar_resultados:
+    // Mostrar mensaje vocales
     mov x0, #1
-    ret
+    adr x1, msg2
+    mov x2, len2
+    mov x8, #64
+    svc #0
+    
+    // Mostrar número de vocales
+    mov x0, x19
+    bl imprimir_numero
+    
+    // Mostrar mensaje consonantes
+    mov x0, #1
+    adr x1, msg3
+    mov x2, len3
+    mov x8, #64
+    svc #0
+    
+    // Mostrar número de consonantes
+    mov x0, x20
+    bl imprimir_numero
+    
+    // Mostrar nueva línea
+    mov x0, #1
+    adr x1, newline
+    mov x2, #1
+    mov x8, #64
+    svc #0
+    
+    // Salir del programa
+    mov x0, #0
+    mov x8, #93
+    svc #0
 
-is_vowel:
-    // x0: carácter a verificar
-    // Retorna: x0 = 1 si es vocal, 0 si no
+imprimir_numero:
+    // x0 = número a imprimir
     stp x29, x30, [sp, #-16]!
-    mov x29, sp
+    stp x19, x20, [sp, #-16]!
     
-    ldr x1, =vowels
-    ldr x2, =vowels_len
-    ldr x2, [x2]
-    mov x3, #0             // i = 0
+    mov x19, x0          // Guardar número original
+    mov x20, #0          // Contador de dígitos
+    mov x3, #10          // Para divisiones
     
-vowel_loop:
-    cmp x3, x2
-    b.ge not_vowel
+    // Si es 0, imprimir 0 directamente
+    cmp x19, #0
+    bne contar_digitos
     
-    ldrb w4, [x1, x3]
-    cmp w0, w4
-    b.eq is_vowel_true
-    
-    add x3, x3, #1
-    b vowel_loop
-    
-not_vowel:
-    mov x0, #0
-    ldp x29, x30, [sp], #16
-    ret
-    
-is_vowel_true:
+    mov w4, #'0'
+    strb w4, [sp, #-1]!
+    mov x1, sp
+    mov x2, #1
     mov x0, #1
+    mov x8, #64
+    svc #0
+    add sp, sp, #1
+    b imprimir_fin
+    
+contar_digitos:
+    mov x1, x19
+count_loop:
+    cbz x1, convertir_digitos
+    udiv x1, x1, x3
+    add x20, x20, #1
+    b count_loop
+    
+convertir_digitos:
+    // Reservar espacio en stack
+    mov x1, x20
+    sub sp, sp, x1
+    mov x2, sp          // Guardar inicio del buffer
+    
+    mov x0, x19         // Restaurar número original
+convertir_loop:
+    udiv x4, x0, x3     // Dividir por 10
+    msub x5, x4, x3, x0 // Obtener resto
+    add w5, w5, #'0'    // Convertir a ASCII
+    sub x1, x1, #1      // Decrementar posición
+    strb w5, [x2, x1]   // Guardar dígito
+    mov x0, x4          // Preparar siguiente iteración
+    cbnz x0, convertir_loop
+    
+    // Imprimir número
+    mov x0, #1          // stdout
+    mov x1, sp          // buffer
+    mov x2, x20         // longitud
+    mov x8, #64         // write syscall
+    svc #0
+    
+    // Restaurar stack
+    add sp, sp, x20
+    
+imprimir_fin:
+    ldp x19, x20, [sp], #16
     ldp x29, x30, [sp], #16
     ret

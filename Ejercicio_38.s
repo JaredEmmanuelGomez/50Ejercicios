@@ -102,3 +102,6 @@ exit:
     mov x0, #0          // código de retorno
     mov x8, #93         // syscall exit
     svc #0
+
+ASCIINEMA REC
+https://asciinema.org/a/690858

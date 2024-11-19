@@ -106,3 +106,6 @@ print_num:
     
     ldp x29, x30, [sp], #16  // Restaurar registros
     ret
+
+ASCIINEMA REC
+https://asciinema.org/a/690739

@@ -310,3 +310,7 @@ print_digits:
 
     ldp x29, x30, [sp], #16
     ret
+
+
+ASCIINEMA REC
+https://asciinema.org/a/690875

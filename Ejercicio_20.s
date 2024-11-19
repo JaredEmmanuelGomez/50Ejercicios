@@ -18,110 +18,124 @@ def busqueda_lineal(arreglo, elemento):
 // Gómez Aguilar Jared Emmanuel
 // 22210309
 .data
-    size_prompt:    .asciz "Enter the size of array: "
-    elem_prompt:    .asciz "Enter element %d: "
-    search_prompt:  .asciz "Enter number to search: "
-    found_msg:      .asciz "Number found at position: %d\n"
-    not_found_msg:  .asciz "Number not found in array\n"
-    scanfmt:        .asciz "%ld"
-    array:          .skip 400       // Space for 50 long integers
-    size:           .quad 0
-    search_num:     .quad 0
+    prompt_size:    .asciz "Enter the number of elements in the array: "
+    prompt_element: .asciz "Enter element #"
+    prompt_search:  .asciz "Enter the element to search: "
+    buffer:         .skip   20
+    array:          .skip   100     // Space for 25 integers (4 bytes each)
+    result_found:   .asciz "Element found at index: "
+    result_not_found: .asciz "Element not found in the array\n"
+    colon:          .asciz ": "
+    newline:        .asciz "\n"
 
 .text
-    .global main
-    .align 2
+.global _start
 
-main:
-    stp     x29, x30, [sp, -16]!
-    mov     x29, sp
+_start:
+    // Print prompt for array size
+    mov     x0, #1
+    adr     x1, prompt_size
+    mov     x2, #44
+    mov     x8, #64
+    svc     #0
 
-    // Print size prompt
-    adrp    x0, size_prompt
-    add     x0, x0, :lo12:size_prompt
-    bl      printf
+    // Read array size
+    mov     x0, #0
+    adr     x1, buffer
+    mov     x2, #20
+    mov     x8, #63
+    svc     #0
 
-    // Read size
-    adrp    x0, scanfmt
-    add     x0, x0, :lo12:scanfmt
-    adrp    x1, size
-    add     x1, x1, :lo12:size
-    bl      scanf
+    // Convert array size to integer
+    adr     x1, buffer
+    mov     x2, #0              // result
+    mov     x3, #10             // multiplier
+convert_size_loop:
+    ldrb    w4, [x1]
+    cmp     w4, #'\n'
+    beq     convert_size_done
+    sub     w4, w4, #'0'
+    mul     x2, x2, x3
+    add     x2, x2, x4
+    add     x1, x1, #1
+    b       convert_size_loop
 
-    // Initialize array input
-    mov     x19, #0               // Counter
-    adrp    x20, array           // Array base address
-    add     x20, x20, :lo12:array
-    adrp    x21, size
-    add     x21, x21, :lo12:size
-    ldr     x21, [x21]           // Size value
+convert_size_done:
+    mov     x9, x2              // Save array size
+    mov     x10, #0             // Array index
+    adr     x11, array          // Array base address
 
+    // Input array elements
 input_loop:
-    cmp     x19, x21
-    b.ge    get_search_num       // If counter >= size, get search number
+    cmp     x10, x9
+    bge     input_done
 
-    // Print element prompt
-    adrp    x0, elem_prompt
-    add     x0, x0, :lo12:elem_prompt
-    add     x1, x19, #1          // Element number (1-based)
-    bl      printf
+    // Print prompt for current element
+    mov     x0, #1
+    adr     x1, prompt_element
+    mov     x2, #19
+    mov     x8, #64
+    svc     #0
+
+    // Print element number
+    adr     x1, buffer
+    mov     x2, x10
+    add     x2, x2, #1          // 1-based indexing
+    bl      int_to_ascii
+    mov     x0, #1
+    adr     x1, buffer
+    bl      print_string
+
+    // Print colon
+    mov     x0, #1
+    adr     x1, colon
+    mov     x2, #2
+    mov     x8, #64
+    svc     #0
 
     // Read element
-    adrp    x0, scanfmt
-    add     x0, x0, :lo12:scanfmt
-    mov     x1, x20              // Current array position
-    bl      scanf
+    mov     x0, #0
+    adr     x1, buffer
+    mov     x2, #20
+    mov     x8, #63
+    svc     #0
 
-    add     x20, x20, #8         // Move to next array position
-    add     x19, x19, #1         // Increment counter
+    // Convert element to integer
+    adr     x1, buffer
+    mov     x2, #0              // result
+    mov     x3, #10             // multiplier
+convert_element_loop:
+    ldrb    w4, [x1]
+    cmp     w4, #'\n'
+    beq     convert_element_done
+    sub     w4, w4, #'0'
+    mul     x2, x2, x3
+    add     x2, x2, x4
+    add     x1, x1, #1
+    b       convert_element_loop
+
+convert_element_done:
+    // Store element in array
+    str     x2, [x11, x10, lsl #3]  // 8-byte integers
+    add     x10, x10, #1
+
     b       input_loop
 
-get_search_num:
-    // Print search prompt
-    adrp    x0, search_prompt
-    add     x0, x0, :lo12:search_prompt
-    bl      printf
+input_done:
+    // Print prompt for search element
+    mov     x0, #1
+    adr     x1, prompt_search
+    mov     x2, #35
+    mov     x8, #64
+    svc     #0
 
-    // Read search number
-    adrp    x0, scanfmt
-    add     x0, x0, :lo12:scanfmt
-    adrp    x1, search_num
-    add     x1, x1, :lo12:search_num
-    bl      scanf
+    // Read search element
+    mov     x0, #0
+    adr     x1, buffer
+    mov     x2, #20
+    mov     x8, #63
+    svc     #0
 
-    // Linear search
-    mov     x19, #0              // Counter
-    adrp    x20, array          // Reset array pointer
-    add     x20, x20, :lo12:array
-    adrp    x22, search_num
-    add     x22, x22, :lo12:search_num
-    ldr     x22, [x22]          // Number to search
-
-search_loop:
-    cmp     x19, x21
-    b.ge    not_found           // If counter >= size, number not found
-    
-    ldr     x23, [x20], #8      // Load value and increment pointer
-    cmp     x23, x22
-    b.eq    found              // If equal, number found
-    add     x19, x19, #1        // Increment counter
-    b       search_loop
-
-found:
-    adrp    x0, found_msg
-    add     x0, x0, :lo12:found_msg
-    add     x1, x19, #1         // Position (1-based)
-    bl      printf
-    b       exit
-
-not_found:
-    adrp    x0, not_found_msg
-    add     x0, x0, :lo12:not_found_msg
-    bl      printf
-
-exit:
-    mov     w0, #0
-    ldp     x29, x30, [sp], #16
-    ret
-
-.size main, .-main
+    // Convert search element to integer
+    adr     x1, buffer
+    mov     x2, #0

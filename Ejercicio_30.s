@@ -14,131 +14,164 @@ def transpose_matrix(matrix):
 
 // Gómez Aguilar Jared Emmanuel
 // 22210309
-.data
-    prompt_size: .asciz "Enter matrix size (N for NxN): "
-    input_msg: .asciz "Enter matrix elements:\n"
-    input_element: .asciz "Enter element [%d][%d]: "
-    output_msg: .asciz "Transposed matrix:\n"
-    element_fmt: .asciz "%d\t"
-    scan_format: .asciz "%d"
-    newline: .asciz "\n"
-
-.bss
-    .align 4
-    matrix: .skip 400     // Space for input matrix
-    result: .skip 400     // Space for transposed matrix
-    size: .skip 4         // Matrix size (N for NxN)
-
 .text
-.global main
-main:
-    // Save link register
-    str lr, [sp, -16]!
+.global _start
 
-    // Get matrix size
-    adrp x0, prompt_size
-    add x0, x0, :lo12:prompt_size
-    bl printf
+// Primero definimos las constantes para las longitudes
+.equ len1, 16        // Longitud de "Matriz Original:\n"
+.equ len2, 19        // Longitud de "Matriz Transpuesta:\n"
 
-    adrp x0, scan_format
-    add x0, x0, :lo12:scan_format
-    adrp x1, size
-    add x1, x1, :lo12:size
-    bl scanf
+_start:
+    // Mostrar mensaje "Matriz Original:"
+    mov x0, #1
+    ldr x1, =msg1
+    mov x2, len1
+    mov x8, #64
+    svc #0
+    
+    // Mostrar matriz original
+    ldr x0, =matriz
+    bl imprimir_matriz
+    
+    // Realizar transposición
+    bl transponer_matriz
+    
+    // Mostrar mensaje "Matriz Transpuesta:"
+    mov x0, #1
+    ldr x1, =msg2
+    mov x2, len2
+    mov x8, #64
+    svc #0
+    
+    // Mostrar matriz transpuesta
+    ldr x0, =matriz_t
+    bl imprimir_matriz
+    
+    // Salir del programa
+    mov x0, #0
+    mov x8, #93
+    svc #0
 
-    // Input matrix
-    adrp x0, input_msg
-    add x0, x0, :lo12:input_msg
-    bl printf
+transponer_matriz:
+    stp x29, x30, [sp, #-16]!
+    mov x29, sp
+    
+    mov x9, #0              // i = 0
+bucle_ext:
+    cmp x9, #3
+    bge fin_trans
+    
+    mov x10, #0            // j = 0
+bucle_int:
+    cmp x10, #3
+    bge sig_fila
+    
+    // Calcular índices
+    // índice_origen = (i * 3 + j) * 8
+    mov x11, x9            // x11 = i
+    mov x12, #3
+    mul x11, x11, x12      // x11 = i * 3
+    add x11, x11, x10      // x11 = i * 3 + j
+    lsl x11, x11, #3       // x11 *= 8
+    
+    // índice_destino = (j * 3 + i) * 8
+    mov x12, x10           // x12 = j
+    mov x13, #3
+    mul x12, x12, x13      // x12 = j * 3
+    add x12, x12, x9       // x12 = j * 3 + i
+    lsl x12, x12, #3       // x12 *= 8
+    
+    // Realizar transposición
+    ldr x0, =matriz
+    ldr x1, =matriz_t
+    ldr x13, [x0, x11]     // Cargar elemento
+    str x13, [x1, x12]     // Guardar elemento transpuesto
+    
+    add x10, x10, #1       // j++
+    b bucle_int
+    
+sig_fila:
+    add x9, x9, #1         // i++
+    b bucle_ext
+    
+fin_trans:
+    ldp x29, x30, [sp], #16
+    ret
 
-    mov w21, #0    // row counter
-input_row_loop:
-    ldr w0, [size]
-    cmp w21, w0
-    b.ge transpose_matrix
+imprimir_matriz:
+    stp x29, x30, [sp, #-16]!
+    mov x29, sp
+    
+    mov x19, x0            // Guardar dirección matriz
+    mov x20, #0            // Contador elementos
+bucle_impresion:
+    cmp x20, #9            // 9 elementos total
+    bge fin_impresion
+    
+    // Imprimir número actual
+    ldr x0, [x19, x20, lsl #3]
+    bl imprimir_numero
+    
+    // Imprimir espacio
+    mov x0, #1
+    ldr x1, =espacio
+    mov x2, #1
+    mov x8, #64
+    svc #0
+    
+    // Nueva línea cada 3 elementos
+    add x20, x20, #1
+    mov x0, x20
+    mov x1, #3
+    udiv x2, x0, x1
+    msub x2, x2, x1, x0    // x2 = x0 % 3
+    cbnz x2, bucle_impresion
+    
+    mov x0, #1
+    ldr x1, =newline
+    mov x2, #1
+    mov x8, #64
+    svc #0
+    b bucle_impresion
 
-    mov w22, #0    // column counter
-input_col_loop:
-    ldr w0, [size]
-    cmp w22, w0
-    b.ge next_input_row
+fin_impresion:
+    ldp x29, x30, [sp], #16
+    ret
 
-    // Print prompt
-    adrp x0, input_element
-    add x0, x0, :lo12:input_element
-    mov w1, w21
-    mov w2, w22
-    bl printf
+imprimir_numero:
+    // Convertir número a string
+    mov x1, #10
+    ldr x2, =buffer
+    add x2, x2, #19
+    mov x3, #0
+    strb w3, [x2]
+convertir:
+    sub x2, x2, #1
+    udiv x3, x0, x1
+    msub x4, x3, x1, x0
+    add x4, x4, #'0'
+    strb w4, [x2]
+    mov x0, x3
+    cbnz x0, convertir
+    
+    // Imprimir número
+    mov x0, #1
+    mov x1, x2
+    ldr x2, =buffer
+    add x2, x2, #19
+    sub x2, x2, x1
+    mov x8, #64
+    svc #0
+    ret
 
-    // Read element
-    adrp x0, scan_format
-    add x0, x0, :lo12:scan_format
-    adrp x1, matrix
-    add x1, x1, :lo12:matrix
-    ldr w3, [size]
-    mul w4, w21, w3
-    add w4, w4, w22
-    lsl w4, w4, #2
-    add x1, x1, x4
-    bl scanf
-
-    add w22, w22, #1
-    b input_col_loop
-
-next_input_row:
-    add w21, w21, #1
-    b input_row_loop
-
-transpose_matrix:
-    mov w21, #0    // row counter
-trans_row_loop:
-    ldr w0, [size]
-    cmp w21, w0
-    b.ge print_result
-
-    mov w22, #0    // column counter
-trans_col_loop:
-    ldr w0, [size]
-    cmp w22, w0
-    b.ge next_trans_row
-
-    // Calculate indices
-    ldr w3, [size]
-    mul w4, w21, w3    // i * n
-    add w4, w4, w22    // i * n + j
-    lsl w4, w4, #2     // (i * n + j) * 4
-
-    mul w5, w22, w3    // j * n
-    add w5, w5, w21    // j * n + i
-    lsl w5, w5, #2     // (j * n + i) * 4
-
-    // Load and store transposed element
-    adrp x0, matrix
-    add x0, x0, :lo12:matrix
-    ldr w6, [x0, x4]    // matrix[i][j]
-
-    adrp x1, result
-    add x1, x1, :lo12:result
-    str w6, [x1, x5]    // result[j][i]
-
-    add w22, w22, #1
-    b trans_col_loop
-
-next_trans_row:
-    add w21, w21, #1
-    b trans_row_loop
-
-print_result:
-    // Print result matrix
-    adrp x0, output_msg
-    add x0, x0, :lo12:output_msg
-    bl printf
-
-    mov w21, #0    // row counter
-print_row_loop:
-    ldr w0, [size]
-    cmp w21, w0
-
+.data
+matriz:     .quad 1, 2, 3, 4, 5, 6, 7, 8, 9
+matriz_t:   .quad 0, 0, 0, 0, 0, 0, 0, 0, 0
+msg1:       .ascii "Matriz Original:\n"
+msg2:       .ascii "Matriz Transpuesta:\n"
+espacio:    .ascii " "
+newline:    .ascii "\n"
+buffer:     .skip 20
 
 ASCIINEMA REC
 https://asciinema.org/a/690723

@@ -235,3 +235,5 @@ reverse_loop:
 
 num_to_str_done:
     ret
+
+https://asciinema.org/a/690891

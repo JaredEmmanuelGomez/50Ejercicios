@@ -90,4 +90,4 @@ salir:
     svc #0
 
 ASCIINEMA
-https://asciinema.org/a/690670
+https://asciinema.org/a/690679

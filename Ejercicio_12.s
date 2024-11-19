@@ -16,72 +16,68 @@ def es_palindromo(cadena):
 //22210309
 .data
     prompt:     .asciz "Enter a string: "
-    yes_msg:    .asciz "The string is a palindrome\n"
-    no_msg:     .asciz "The string is not a palindrome\n"
-    scanfmt:    .asciz "%s"
-    buffer:     .skip 100           // Buffer for input string
+    yes_msg:    .asciz "It is a palindrome\n"
+    no_msg:     .asciz "It is not a palindrome\n"
+    buffer:     .skip 100
 
 .text
-    .global main
-    .align 2
+.global _start
 
-main:
-    stp     x29, x30, [sp, -16]!
-    mov     x29, sp
-
+_start:
     // Print prompt
-    adrp    x0, prompt
-    add     x0, x0, :lo12:prompt
-    bl      printf
+    mov     x0, #1          // file descriptor: 1 is stdout
+    ldr     x1, =prompt     // address of prompt string
+    mov     x2, #16         // length of prompt
+    mov     x8, #64         // write syscall
+    svc     #0
 
     // Read input
-    adrp    x0, scanfmt
-    add     x0, x0, :lo12:scanfmt
-    adrp    x1, buffer
-    add     x1, x1, :lo12:buffer
-    bl      scanf
+    mov     x0, #0          // file descriptor: 0 is stdin
+    ldr     x1, =buffer     // address of buffer
+    mov     x2, #100        // maximum length
+    mov     x8, #63         // read syscall
+    svc     #0
 
-    // Get string length
-    adrp    x19, buffer
-    add     x19, x19, :lo12:buffer   // Start of string
-    mov     x20, x19                 // Copy start address
-
-strlen_loop:
-    ldrb    w21, [x20], #1
-    cbnz    w21, strlen_loop
-    sub     x20, x20, x19           // Length in x20
-    sub     x20, x20, #2            // Adjust for null terminator
-
-    // Check palindrome
-    mov     x21, x19                // Start pointer
-    add     x22, x19, x20          // End pointer
-
-check_loop:
-    cmp     x21, x22
-    b.hs    is_palindrome          // If pointers meet or cross, it's a palindrome
+    // Save string length
+    sub     x19, x0, #1     // length minus newline
     
-    ldrb    w23, [x21]
-    ldrb    w24, [x22]
-    cmp     w23, w24
-    b.ne    not_palindrome         // If characters don't match, not a palindrome
-    add     x21, x21, #1
-    sub     x22, x22, #1
-    b       check_loop
+    // Setup for palindrome check
+    ldr     x20, =buffer    // start pointer
+    add     x21, x20, x19   // end pointer
+    sub     x21, x21, #1    // adjust end pointer
 
-is_palindrome:
-    adrp    x0, yes_msg
-    add     x0, x0, :lo12:yes_msg
-    bl      printf
-    b       done
+loop:
+    cmp     x20, x21        // compare pointers
+    bge     palindrome      // if crossed, it's a palindrome
+    
+    ldrb    w22, [x20]      // load char from start
+    ldrb    w23, [x21]      // load char from end
+    
+    cmp     w22, w23        // compare characters
+    bne     not_palindrome  // if not equal, not a palindrome
+    
+    add     x20, x20, #1    // move start pointer forward
+    sub     x21, x21, #1    // move end pointer backward
+    b       loop
+
+palindrome:
+    mov     x0, #1          // stdout
+    ldr     x1, =yes_msg    // success message
+    mov     x2, #19         // length of message
+    mov     x8, #64         // write syscall
+    svc     #0
+    b       exit
 
 not_palindrome:
-    adrp    x0, no_msg
-    add     x0, x0, :lo12:no_msg
-    bl      printf
+    mov     x0, #1          // stdout
+    ldr     x1, =no_msg     // failure message
+    mov     x2, #23         // length of message
+    mov     x8, #64         // write syscall
+    svc     #0
 
-done:
-    mov     w0, #0
-    ldp     x29, x30, [sp], #16
-    ret
+exit:
+    mov     x8, #93         // exit syscall
+    mov     x0, #0          // return code 0
+    svc     #0
 
-.size main, .-main
+ASCIINEMA REC

@@ -19,119 +19,207 @@ def multiply_matrices(A, B):
 
 // Gómez Aguilar Jared Emmanuel
 // 22210309
-.data
-    prompt_size: .asciz "Enter matrix size (N for NxN): "
-    input_mat1: .asciz "Enter elements for first matrix:\n"
-    input_mat2: .asciz "Enter elements for second matrix:\n"
-    input_element: .asciz "Enter element [%d][%d]: "
-    output_msg: .asciz "Result matrix:\n"
-    element_fmt: .asciz "%d\t"
-    scan_format: .asciz "%d"
-    newline: .asciz "\n"
-
-.bss
-    .align 4
-    matrix1: .skip 400    // Space for up to 10x10 matrix
-    matrix2: .skip 400    // Space for up to 10x10 matrix
-    result:  .skip 400    // Space for result matrix
-    size: .skip 4         // Matrix size (N for NxN)
-
 .text
-.global main
-main:
-    // Save link register
-    str lr, [sp, -16]!
+.global _start
 
-    // Get matrix size
-    adrp x0, prompt_size
-    add x0, x0, :lo12:prompt_size
-    bl printf
+_start:
+    // Mostrar mensaje "Matriz A:"
+    mov x0, #1
+    ldr x1, =msg1
+    mov x2, len1
+    mov x8, #64
+    svc #0
 
-    adrp x0, scan_format
-    add x0, x0, :lo12:scan_format
-    adrp x1, size
-    add x1, x1, :lo12:size
-    bl scanf
+    // Mostrar Matriz A
+    ldr x0, =matrizA
+    bl print_matrix
 
-    // Input matrices (similar to addition program)
-    // ... [Input code same as matrix addition] ...
+    // Mostrar mensaje "Matriz B:"
+    mov x0, #1
+    ldr x1, =msg2
+    mov x2, len2
+    mov x8, #64
+    svc #0
+
+    // Mostrar Matriz B
+    ldr x0, =matrizB
+    bl print_matrix
+
+    // Multiplicar matrices
+    bl multiply_matrices
+
+    // Mostrar mensaje "Matriz Resultado:"
+    mov x0, #1
+    ldr x1, =msg3
+    mov x2, len3
+    mov x8, #64
+    svc #0
+
+    // Mostrar Matriz Resultado
+    ldr x0, =matrizR
+    bl print_matrix
+
+    // Salir del programa
+    mov x0, #0
+    mov x8, #93
+    svc #0
 
 multiply_matrices:
-    mov w21, #0    // i counter
-mult_i_loop:
-    ldr w0, [size]
-    cmp w21, w0
-    b.ge print_result
+    // Guardar registros
+    stp x29, x30, [sp, #-16]!
+    stp x19, x20, [sp, #-16]!
+    mov x29, sp
 
-    mov w22, #0    // j counter
-mult_j_loop:
-    ldr w0, [size]
-    cmp w22, w0
-    b.ge next_mult_i
+    // Inicializar registros
+    ldr x19, =matrizA        // Dirección de matriz A
+    ldr x20, =matrizB        // Dirección de matriz B
+    ldr x21, =matrizR        // Dirección de matriz resultado
+    mov x22, #0              // i = 0 (fila)
 
-    // Initialize result[i][j] to 0
-    adrp x0, result
-    add x0, x0, :lo12:result
-    ldr w3, [size]
-    mul w4, w21, w3
-    add w4, w4, w22
-    lsl w4, w4, #2
-    mov w5, #0
-    str w5, [x0, x4]
+outer_loop:
+    cmp x22, #3              // Comparar i con size
+    bge mult_end             // Si i >= size, terminar
+    mov x23, #0              // j = 0 (columna)
 
-    mov w23, #0    // k counter
-mult_k_loop:
-    ldr w0, [size]
-    cmp w23, w0
-    b.ge next_mult_j
+middle_loop:
+    cmp x23, #3              // Comparar j con size
+    bge next_row            // Si j >= size, siguiente fila
+    mov x24, #0              // k = 0
+    mov x25, xzr            // Acumulador para el resultado
 
-    // Calculate indices
-    ldr w3, [size]
-    mul w4, w21, w3    // i * n
-    add w4, w4, w23    // i * n + k
-    lsl w4, w4, #2     // (i * n + k) * 4
+inner_loop:
+    cmp x24, #3              // Comparar k con size
+    bge store_result         // Si k >= size, almacenar resultado
 
-    mul w5, w23, w3    // k * n
-    add w5, w5, w22    // k * n + j
-    lsl w5, w5, #2     // (k * n + j) * 4
+    // Calcular índices
+    mov x0, x22              // i
+    mov x1, #3               // size
+    mul x0, x0, x1           // i * size
+    add x0, x0, x24          // (i * size) + k
+    lsl x0, x0, #3           // * 8 (tamaño de quad)
+    ldr x1, [x19, x0]        // Cargar A[i][k]
 
-    // Load elements
-    adrp x0, matrix1
-    add x0, x0, :lo12:matrix1
-    ldr w6, [x0, x4]    // matrix1[i][k]
+    mov x0, x24              // k
+    mov x2, #3               // size
+    mul x0, x0, x2           // k * size
+    add x0, x0, x23          // (k * size) + j
+    lsl x0, x0, #3           // * 8
+    ldr x2, [x20, x0]        // Cargar B[k][j]
 
-    adrp x0, matrix2
-    add x0, x0, :lo12:matrix2
-    ldr w7, [x0, x5]    // matrix2[k][j]
+    // Multiplicar y acumular
+    mul x0, x1, x2           // A[i][k] * B[k][j]
+    add x25, x25, x0         // Acumular resultado
 
-    // Multiply and add to result
-    mul w6, w6, w7
+    add x24, x24, #1         // k++
+    b inner_loop
+
+store_result:
+    // Calcular índice para almacenar resultado
+    mov x0, x22              // i
+    mov x1, #3               // size
+    mul x0, x0, x1           // i * size
+    add x0, x0, x23          // (i * size) + j
+    lsl x0, x0, #3           // * 8
+    str x25, [x21, x0]       // Almacenar resultado en C[i][j]
+
+    add x23, x23, #1         // j++
+    b middle_loop
+
+next_row:
+    add x22, x22, #1         // i++
+    b outer_loop
+
+mult_end:
+    ldp x19, x20, [sp], #16
+    ldp x29, x30, [sp], #16
+    ret
+
+print_matrix:
+    // Guardar registros
+    stp x29, x30, [sp, #-32]!
+    stp x19, x20, [sp, #16]
+    mov x29, sp
+
+    mov x19, x0            // Guardar dirección de la matriz
+    mov x20, #0            // Contador de elementos
+
+print_matrix_loop:
+    cmp x20, #9            // 9 elementos en total
+    bge print_matrix_end
+
+    // Convertir número a string
+    ldr x0, [x19, x20, lsl #3]
+    ldr x1, =buffer
+    bl numero_a_string
+
+    // Imprimir número
+    mov x0, #1
+    ldr x1, =buffer
+    mov x8, #64
+    svc #0
+
+    // Imprimir espacio
+    mov x0, #1
+    ldr x1, =space
+    mov x2, #2
+    mov x8, #64
+    svc #0
+
+    // Verificar si necesitamos nueva línea (cada 3 elementos)
+    add x20, x20, #1
+    mov x0, x20
+    mov x1, #3
+    udiv x2, x0, x1
+    msub x2, x2, x1, x0    // x2 = x0 % 3
+    cbnz x2, print_matrix_loop
+
+    // Imprimir nueva línea
+    mov x0, #1
+    ldr x1, =newline
+    mov x2, #1
+    mov x8, #64
+    svc #0
+    b print_matrix_loop
+
+print_matrix_end:
+    // Imprimir nueva línea extra para separación
+    mov x0, #1
+    ldr x1, =newline
+    mov x2, #1
+    mov x8, #64
+    svc #0
+
+    ldp x19, x20, [sp, #16]
+    ldp x29, x30, [sp], #32
+    ret
+
+numero_a_string:
+    // x0 = número a convertir
+    // x1 = dirección del buffer
+    mov x2, #10            // Divisor
+    mov x3, x1             // Guardar inicio del buffer
     
-    adrp x0, result
-    add x0, x0, :lo12:result
-    mul w8, w21, w3
-    add w8, w8, w22
-    lsl w8, w8, #2
-    ldr w9, [x0, x8]
-    add w9, w9, w6
-    str w9, [x0, x8]
+convert_loop:
+    udiv x4, x0, x2        // x4 = x0 / 10
+    msub x5, x4, x2, x0    // x5 = x0 - (x4 * 10) = residuo
+    add x5, x5, #'0'       // Convertir a ASCII
+    strb w5, [x1], #1      // Guardar dígito y avanzar
+    mov x0, x4             // Preparar para siguiente división
+    cbnz x0, convert_loop  // Continuar si el cociente no es cero
 
-    add w23, w23, #1
-    b mult_k_loop
+    // Invertir los caracteres
+    mov x4, x3             // x4 = inicio
+    sub x5, x1, #1         // x5 = fin
+reverse_loop:
+    cmp x4, x5
+    bge reverse_done
+    ldrb w6, [x4]
+    ldrb w7, [x5]
+    strb w7, [x4], #1
+    strb w6, [x5], #-1
+    b reverse_loop
 
-next_mult_j:
-    add w22, w22, #1
-    b mult_j_loop
-
-next_mult_i:
-    add w21, w21, #1
-    b mult_i_loop
-
-print_result:
-    // Print result (similar to addition program)
-    // ... [Print code same as matrix addition] ...
-
-exit:
-    ldr lr, [sp], #16
-    mov w0, #0
+reverse_done:
+    sub x0, x1, x3         // Calcular longitud
+    mov x2, x0             // Guardar longitud para syscall write
     ret

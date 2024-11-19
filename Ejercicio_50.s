@@ -105,3 +105,6 @@ exit_program:
     // Salir del programa
     mov x8, #93          // exit syscall
     svc #0
+
+ASCIINEMA REC
+https://asciinema.org/a/690896

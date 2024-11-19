@@ -151,3 +151,6 @@ fin_mostrar:
     // Restaurar enlace de retorno
     ldr x30, [sp], #16
     ret
+
+ASCIINEMA REC
+https://asciinema.org/a/690859

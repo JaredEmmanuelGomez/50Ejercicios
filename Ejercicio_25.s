@@ -181,3 +181,6 @@ reverse_done:
     sub x0, x1, x3         // Calcular longitud
     mov x2, x0             // Guardar longitud para syscall write
     ret
+
+ASCIINEMA REC
+https://asciinema.org/a/690703

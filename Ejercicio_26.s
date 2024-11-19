@@ -21,155 +21,172 @@ def selection_sort(arr):
 // Gómez Aguilar Jared Emmanuel
 // 22210309
 .data
-    input_size: .asciz "Enter array size: "
-    input_num: .asciz "Enter number %d: "
-    output_msg: .asciz "Sorted array: "
-    scan_format: .asciz "%d"
-    print_format: .asciz "%d "
-    newline: .asciz "\n"
-
-.bss
-    .align 4
-    array: .skip 400    // Space for up to 100 integers
-    size: .skip 4       // Variable to store array size
+    msg1:    .ascii "Los elementos del arreglo son: 45, 23, 78, 12, 67, 34, 89, 9\n"
+    len1 = . - msg1
+    msgOrd:  .ascii "El arreglo ordenado es: "
+    lenOrd = . - msgOrd
+    array:   .quad 45, 23, 78, 12, 67, 34, 89, 9
+    buffer:  .skip 20        // Buffer para convertir número a string
+    space:   .ascii " "
+    newline: .ascii "\n"
 
 .text
-.global main
-main:
-    // Save link register
-    str lr, [sp, -16]!
+.global _start
 
-    // Print prompt for array size
-    adrp x0, input_size
-    add x0, x0, :lo12:input_size
-    bl printf
+_start:
+    // Mostrar los elementos del arreglo original
+    mov x0, #1              // stdout
+    ldr x1, =msg1          // mensaje
+    mov x2, len1           // longitud
+    mov x8, #64            // syscall write
+    svc #0
 
-    // Read array size
-    adrp x0, scan_format
-    add x0, x0, :lo12:scan_format
-    adrp x1, size
-    add x1, x1, :lo12:size
-    bl scanf
+    // Inicializar para ordenamiento por selección
+    ldr x0, =array         // Dirección base del arreglo
+    mov x1, #8             // Tamaño del arreglo
+    
+    // Llamar a la función de ordenamiento por selección
+    bl selection_sort
 
-    // Initialize counter for array input
-    mov w21, #0
+    // Mostrar mensaje "El arreglo ordenado es: "
+    mov x0, #1
+    ldr x1, =msgOrd
+    mov x2, lenOrd
+    mov x8, #64
+    svc #0
 
-input_loop:
-    // Check if we've input all numbers
-    adrp x0, size
-    add x0, x0, :lo12:size
-    ldr w1, [x0]
-    cmp w21, w1
-    b.ge selection_sort
+    // Mostrar el arreglo ordenado
+    ldr x0, =array
+    mov x1, #8
+    bl print_array
 
-    // Print prompt for number
-    adrp x0, input_num
-    add x0, x0, :lo12:input_num
-    mov w1, w21
-    bl printf
-
-    // Read number
-    adrp x0, scan_format
-    add x0, x0, :lo12:scan_format
-    adrp x1, array
-    add x1, x1, :lo12:array
-    add x1, x1, w21, lsl #2
-    bl scanf
-
-    // Increment counter
-    add w21, w21, #1
-    b input_loop
+    // Salir del programa
+    mov x0, #0
+    mov x8, #93
+    svc #0
 
 selection_sort:
-    // Initialize outer loop counter
-    mov w21, #0        // i = 0
-
-outer_loop:
-    // Check outer loop condition
-    adrp x0, size
-    add x0, x0, :lo12:size
-    ldr w1, [x0]
-    sub w1, w1, #1
-    cmp w21, w1
-    b.ge print_array
-
-    // Initialize min_idx
-    mov w22, w21       // min_idx = i
-    add w23, w21, #1   // j = i + 1
-
-find_min:
-    // Check inner loop condition
-    adrp x0, size
-    add x0, x0, :lo12:size
-    ldr w1, [x0]
-    cmp w23, w1
-    b.ge swap_min
-
-    // Compare array[j] with array[min_idx]
-    adrp x0, array
-    add x0, x0, :lo12:array
-    ldr w24, [x0, w23, sxtw #2]    // array[j]
-    ldr w25, [x0, w22, sxtw #2]    // array[min_idx]
+    // Guardar registros
+    stp x29, x30, [sp, #-16]!
+    mov x29, sp
     
-    cmp w24, w25
-    b.ge next_j
-    mov w22, w23       // Update min_idx
+    mov x2, #0                  // i = 0
+outer_loop:
+    cmp x2, x1                  // Comparar i con tamaño
+    bge sort_end               // Si i >= tamaño, terminar
+    
+    mov x3, x2                  // min_idx = i
+    mov x4, x2                  // j = i
+    add x4, x4, #1             // j = i + 1
 
-next_j:
-    add w23, w23, #1
-    b find_min
+find_min_loop:
+    cmp x4, x1                  // Comparar j con tamaño
+    bge swap_min               // Si j >= tamaño, hacer intercambio
+    
+    // Cargar elementos para comparar
+    ldr x5, [x0, x3, lsl #3]   // array[min_idx]
+    ldr x6, [x0, x4, lsl #3]   // array[j]
+    
+    // Comparar elementos
+    cmp x6, x5                 // Comparar array[j] con array[min_idx]
+    bge next_element          // Si array[j] >= array[min_idx], siguiente elemento
+    mov x3, x4                 // Actualizar min_idx = j
+
+next_element:
+    add x4, x4, #1             // j++
+    b find_min_loop
 
 swap_min:
-    // Check if swap needed
-    cmp w22, w21
-    b.eq next_i
+    // Si min_idx != i, hacer intercambio
+    cmp x3, x2
+    beq next_iteration
+    
+    // Intercambiar elementos
+    ldr x5, [x0, x2, lsl #3]   // temp = array[i]
+    ldr x6, [x0, x3, lsl #3]   // array[min_idx]
+    str x6, [x0, x2, lsl #3]   // array[i] = array[min_idx]
+    str x5, [x0, x3, lsl #3]   // array[min_idx] = temp
 
-    // Perform swap
-    adrp x0, array
-    add x0, x0, :lo12:array
-    ldr w23, [x0, w21, sxtw #2]    // temp = array[i]
-    ldr w24, [x0, w22, sxtw #2]    // array[min_idx]
-    str w24, [x0, w21, sxtw #2]    // array[i] = array[min_idx]
-    str w23, [x0, w22, sxtw #2]    // array[min_idx] = temp
-
-next_i:
-    add w21, w21, #1
+next_iteration:
+    add x2, x2, #1             // i++
     b outer_loop
 
-print_array:
-    // Print sorted array message
-    adrp x0, output_msg
-    add x0, x0, :lo12:output_msg
-    bl printf
+sort_end:
+    ldp x29, x30, [sp], #16
+    ret
 
-    // Initialize print counter
-    mov w21, #0
+print_array:
+    // Guardar registros
+    stp x29, x30, [sp, #-16]!
+    mov x29, sp
+    
+    mov x19, x0                // Guardar dirección del array
+    mov x20, x1                // Guardar tamaño
+    mov x21, #0                // Índice actual
 
 print_loop:
-    // Check print condition
-    adrp x0, size
-    add x0, x0, :lo12:size
-    ldr w1, [x0]
-    cmp w21, w1
-    b.ge print_newline
-
-    // Print number
-    adrp x0, print_format
-    add x0, x0, :lo12:print_format
-    adrp x2, array
-    add x2, x2, :lo12:array
-    ldr w1, [x2, w21, sxtw #2]
-    bl printf
-
-    add w21, w21, #1
+    cmp x21, x20
+    bge print_end
+    
+    // Convertir número actual a string
+    ldr x0, [x19, x21, lsl #3]
+    ldr x1, =buffer
+    bl numero_a_string
+    
+    // Imprimir número
+    mov x0, #1
+    ldr x1, =buffer
+    mov x8, #64
+    svc #0
+    
+    // Imprimir espacio
+    mov x0, #1
+    ldr x1, =space
+    mov x2, #1
+    mov x8, #64
+    svc #0
+    
+    add x21, x21, #1
     b print_loop
 
-print_newline:
-    adrp x0, newline
-    add x0, x0, :lo12:newline
-    bl printf
+print_end:
+    // Imprimir nueva línea
+    mov x0, #1
+    ldr x1, =newline
+    mov x2, #1
+    mov x8, #64
+    svc #0
+    
+    ldp x29, x30, [sp], #16
+    ret
 
-    // Restore link register and return
-    ldr lr, [sp], #16
-    mov w0, #0
+numero_a_string:
+    // x0 = número a convertir
+    // x1 = dirección del buffer
+    mov x2, #10            // Divisor
+    mov x3, x1             // Guardar inicio del buffer
+    
+convert_loop:
+    udiv x4, x0, x2        // x4 = x0 / 10
+    msub x5, x4, x2, x0    // x5 = x0 - (x4 * 10) = residuo
+    add x5, x5, #'0'       // Convertir a ASCII
+    strb w5, [x1], #1      // Guardar dígito y avanzar
+    mov x0, x4             // Preparar para siguiente división
+    cbnz x0, convert_loop  // Continuar si el cociente no es cero
+
+    // Invertir los caracteres
+    mov x4, x3             // x4 = inicio
+    sub x5, x1, #1         // x5 = fin
+reverse_loop:
+    cmp x4, x5
+    bge reverse_done
+    ldrb w6, [x4]
+    ldrb w7, [x5]
+    strb w7, [x4], #1
+    strb w6, [x5], #-1
+    b reverse_loop
+
+reverse_done:
+    sub x0, x1, x3         // Calcular longitud
+    mov x2, x0             // Guardar longitud para syscall write
     ret

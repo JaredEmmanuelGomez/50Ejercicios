@@ -229,3 +229,6 @@ restaurar_loop:
 fin_restaurar:
     ldr x30, [sp], #16
     ret
+
+ASCIINEMA REC
+https://asciinema.org/a/690862

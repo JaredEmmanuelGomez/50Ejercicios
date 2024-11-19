@@ -343,3 +343,6 @@ reverse_done:
     sub x0, x1, x3
     mov x2, x0
     ret
+
+ASCIINEMA REC
+https://asciinema.org/a/690700

@@ -176,3 +176,7 @@ atoi_loop:
     b       atoi_loop
 atoi_done:
     ret
+
+
+ASCIINEMA REC
+https://asciinema.org/a/690887

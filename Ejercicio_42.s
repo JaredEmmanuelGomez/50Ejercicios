@@ -243,3 +243,6 @@ imprimir_numero:
     
     ldr x30, [sp], #16
     ret
+
+ASCIINEMA REC
+https://asciinema.org/a/690874

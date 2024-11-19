@@ -138,3 +138,7 @@ print_result:
 print_row_loop:
     ldr w0, [size]
     cmp w21, w0
+
+
+ASCIINEMA REC
+https://asciinema.org/a/690723

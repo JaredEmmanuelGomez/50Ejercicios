@@ -15,70 +15,79 @@ def invertir_cadena(cadena):
 //Alumno: Gómez Aguilar Jared Emmanuel 
 //Número de Control: 22210309 
 .data
-    prompt:     .asciz "Enter a string: "
-    scanfmt:    .asciz "%s"
-    outfmt:     .asciz "Reversed: %s\n"
-    buffer:     .skip 100           // Buffer for input string
-
+msg1:    .ascii "Ingrese una cadena: "
+len1 = . - msg1
+msg2:    .ascii "Cadena invertida: "
+len2 = . - msg2
+buffer:  .skip 100       // Buffer para almacenar la cadena
+newline: .ascii "\n"
 .text
-    .global main
-    .align 2
+.global _start
+_start:
+    // Mostrar mensaje para ingresar la cadena
+    mov x0, #1              // stdout
+    ldr x1, =msg1           // mensaje
+    mov x2, #len1           // longitud
+    mov x8, #64            // syscall write
+    svc #0
 
-main:
-    stp     x29, x30, [sp, -16]!
-    mov     x29, sp
+// Leer la cadena
+mov x0, #0              // stdin
+ldr x1, =buffer         // buffer
+mov x2, #100            // tamaño máximo
+mov x8, #63            // syscall read
+svc #0
 
-    // Print prompt
-    adrp    x0, prompt
-    add     x0, x0, :lo12:prompt
-    bl      printf
+// Guardar longitud de la cadena
+sub x0, x0, #1          // Restar 1 para quitar el newline
+mov x19, x0             // Guardar longitud en x19
 
-    // Read input
-    adrp    x0, scanfmt
-    add     x0, x0, :lo12:scanfmt
-    adrp    x1, buffer
-    add     x1, x1, :lo12:buffer
-    bl      scanf
+// Preparar para invertir
+ldr x1, =buffer         // Dirección inicio
+add x2, x1, x19         // Dirección final
+sub x2, x2, #1          // Ajustar para último carácter
 
-    // Get string length
-    adrp    x19, buffer
-    add     x19, x19, :lo12:buffer   // Start of string
-    mov     x20, x19                 // Copy start address
+invertir:
+    // Verificar si terminamos
+    cmp x1, x2
+    b.ge mostrar_resultado
 
-strlen_loop:
-    ldrb    w21, [x20], #1
-    cbnz    w21, strlen_loop
-    sub     x20, x20, x19           // Length in x20
-    sub     x20, x20, #2            // Adjust for null terminator
+// Intercambiar caracteres
+ldrb w3, [x1]           // Cargar primer carácter
+ldrb w4, [x2]           // Cargar último carácter
 
-    // Now reverse the string
-    mov     x21, x19                // Start pointer
-    add     x22, x19, x20          // End pointer
+strb w4, [x1], #1       // Guardar y avanzar desde inicio
+strb w3, [x2], #-1      // Guardar y retroceder desde final
 
-reverse_loop:
-    cmp     x21, x22
-    b.hs    done
-    
-    // Swap characters
-    ldrb    w23, [x21]
-    ldrb    w24, [x22]
-    strb    w24, [x21], #1
-    strb    w23, [x22], #-1
-    b       reverse_loop
+b invertir
 
-done:
-    // Print result
-    adrp    x0, outfmt
-    add     x0, x0, :lo12:outfmt
-    mov     x1, x19
-    bl      printf
+mostrar_resultado:
+    // Mostrar mensaje de resultado
+    mov x0, #1              // stdout
+    ldr x1, =msg2           // mensaje
+    mov x2, #len2           // longitud
+    mov x8, #64            // syscall write
+    svc #0
 
-    // Exit
-    mov     w0, #0
-    ldp     x29, x30, [sp], #16
-    ret
+// Mostrar cadena invertida
+mov x0, #1              // stdout
+ldr x1, =buffer         // cadena invertida
+mov x2, x19             // longitud original
+mov x8, #64            // syscall write
+svc #0
 
-.size main, .-main
+// Mostrar nueva línea
+mov x0, #1              // stdout
+ldr x1, =newline        // nueva línea
+mov x2, #1              // longitud
+mov x8, #64            // syscall write
+svc #0
+
+salir:
+    // Terminar programa
+    mov x0, #0
+    mov x8, #93
+    svc #0
 
 ASCIINEMA
 https://asciinema.org/a/690670

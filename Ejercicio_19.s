@@ -14,88 +14,205 @@ def suma_arreglo(arreglo):
 // Gómez Aguilar Jared Emmanuel
 // 22210309
 .data
-    size_prompt:    .asciz "Enter the size of array: "
-    elem_prompt:    .asciz "Enter element %d: "
-    outfmt:         .asciz "Sum of array elements: %ld\n"
-    scanfmt:        .asciz "%ld"
-    array:          .skip 400       // Space for 50 long integers
-    size:           .quad 0
+    prompt_size:    .asciz "Enter the number of elements in the array: "
+    prompt_element: .asciz "Enter element #"
+    buffer:         .skip   20
+    array:          .skip   100     // Space for 25 integers (4 bytes each)
+    result:         .skip   64
+    colon:          .asciz ": "
+    newline:        .asciz "\n"
 
 .text
-    .global main
-    .align 2
+.global _start
 
-main:
-    stp     x29, x30, [sp, -16]!
-    mov     x29, sp
+_start:
+    // Print prompt for array size
+    mov     x0, #1
+    adr     x1, prompt_size
+    mov     x2, #44
+    mov     x8, #64
+    svc     #0
 
-    // Print size prompt
-    adrp    x0, size_prompt
-    add     x0, x0, :lo12:size_prompt
-    bl      printf
+    // Read array size
+    mov     x0, #0
+    adr     x1, buffer
+    mov     x2, #20
+    mov     x8, #63
+    svc     #0
 
-    // Read size
-    adrp    x0, scanfmt
-    add     x0, x0, :lo12:scanfmt
-    adrp    x1, size
-    add     x1, x1, :lo12:size
-    bl      scanf
+    // Convert array size to integer
+    adr     x1, buffer
+    mov     x2, #0              // result
+    mov     x3, #10             // multiplier
+convert_size_loop:
+    ldrb    w4, [x1]
+    cmp     w4, #'\n'
+    beq     convert_size_done
+    sub     w4, w4, #'0'
+    mul     x2, x2, x3
+    add     x2, x2, x4
+    add     x1, x1, #1
+    b       convert_size_loop
 
-    // Initialize array input
-    mov     x19, #0               // Counter
-    adrp    x20, array           // Array base address
-    add     x20, x20, :lo12:array
-    adrp    x21, size
-    add     x21, x21, :lo12:size
-    ldr     x21, [x21]           // Size value
+convert_size_done:
+    mov     x9, x2              // Save array size
+    mov     x10, #0             // Array index
+    adr     x11, array          // Array base address
 
+    // Input array elements
 input_loop:
-    cmp     x19, x21
-    b.ge    calculate_sum        // If counter >= size, start sum
+    cmp     x10, x9
+    bge     input_done
 
-    // Print element prompt
-    adrp    x0, elem_prompt
-    add     x0, x0, :lo12:elem_prompt
-    add     x1, x19, #1          // Element number (1-based)
-    bl      printf
+    // Print prompt for current element
+    mov     x0, #1
+    adr     x1, prompt_element
+    mov     x2, #19
+    mov     x8, #64
+    svc     #0
+
+    // Print element number
+    adr     x1, buffer
+    mov     x2, x10
+    add     x2, x2, #1          // 1-based indexing
+    bl      int_to_ascii
+    mov     x0, #1
+    adr     x1, buffer
+    bl      print_string
+
+    // Print colon
+    mov     x0, #1
+    adr     x1, colon
+    mov     x2, #2
+    mov     x8, #64
+    svc     #0
 
     // Read element
-    adrp    x0, scanfmt
-    add     x0, x0, :lo12:scanfmt
-    mov     x1, x20              // Current array position
-    bl      scanf
+    mov     x0, #0
+    adr     x1, buffer
+    mov     x2, #20
+    mov     x8, #63
+    svc     #0
 
-    add     x20, x20, #8         // Move to next array position
-    add     x19, x19, #1         // Increment counter
+    // Convert element to integer
+    adr     x1, buffer
+    mov     x2, #0              // result
+    mov     x3, #10             // multiplier
+convert_element_loop:
+    ldrb    w4, [x1]
+    cmp     w4, #'\n'
+    beq     convert_element_done
+    sub     w4, w4, #'0'
+    mul     x2, x2, x3
+    add     x2, x2, x4
+    add     x1, x1, #1
+    b       convert_element_loop
+
+convert_element_done:
+    // Store element in array
+    str     x2, [x11, x10, lsl #3]  // 8-byte integers
+    add     x10, x10, #1
+
     b       input_loop
 
-calculate_sum:
-    mov     x19, #0              // Reset counter
-    mov     x22, #0              // Sum
-    adrp    x20, array          // Reset array pointer
-    add     x20, x20, :lo12:array
-
+input_done:
+    // Calculate sum of array
+    mov     x2, #0              // Sum
+    mov     x10, #0             // Index
 sum_loop:
-    cmp     x19, x21
-    b.ge    print_result        // If counter >= size, print result
-    
-    ldr     x23, [x20], #8      // Load value and increment pointer
-    add     x22, x22, x23       // Add to sum
-    add     x19, x19, #1        // Increment counter
+    cmp     x10, x9
+    bge     sum_done
+    ldr     x3, [x11, x10, lsl #3]
+    add     x2, x2, x3
+    add     x10, x10, #1
     b       sum_loop
 
-print_result:
-    // Print sum
-    adrp    x0, outfmt
-    add     x0, x0, :lo12:outfmt
-    mov     x1, x22
-    bl      printf
+sum_done:
+    // Convert sum to ASCII
+    adr     x1, result
+    mov     x3, #10             // Divisor
+    mov     x4, #0              // Digit counter
 
-    mov     w0, #0
-    ldp     x29, x30, [sp], #16
+convert_to_ascii:
+    udiv    x5, x2, x3          // Divide by 10
+    msub    x6, x5, x3, x2      // Get remainder
+    add     x6, x6, #'0'        // Convert to ASCII
+    strb    w6, [x1, x4]        // Store digit
+    add     x4, x4, #1          // Increment counter
+    mov     x2, x5              // Update number
+    cbnz    x2, convert_to_ascii
+
+    // Reverse the string
+    mov     x5, #0              // Start index
+    sub     x6, x4, #1          // End index
+reverse_loop:
+    cmp     x5, x6
+    bhs     reverse_done
+    ldrb    w7, [x1, x5]
+    ldrb    w8, [x1, x6]
+    strb    w8, [x1, x5]
+    strb    w7, [x1, x6]
+    add     x5, x5, #1
+    sub     x6, x6, #1
+    b       reverse_loop
+
+reverse_done:
+    // Add newline
+    strb    w3, [x1, x4]
+    mov     w3, #'\n'
+    strb    w3, [x1, x4]
+
+    // Print result
+    mov     x0, #1              // stdout
+    adr     x1, result
+    add     x2, x4, #1          // Length including newline
+    mov     x8, #64             // sys_write
+    svc     #0
+
+exit:
+    mov     x0, #0              // return 0
+    mov     x8, #93             // sys_exit
+    svc     #0
+
+// Helper function to convert integer to ASCII
+int_to_ascii:
+    adr     x1, buffer
+    mov     x3, #10             // Divisor
+    mov     x4, #0              // Digit counter
+
+int_to_ascii_loop:
+    udiv    x5, x2, x3          // Divide by 10
+    msub    x6, x5, x3, x2      // Get remainder
+    add     x6, x6, #'0'        // Convert to ASCII
+    strb    w6, [x1, x4]        // Store digit
+    add     x4, x4, #1          // Increment counter
+    mov     x2, x5              // Update number
+    cbnz    x2, int_to_ascii_loop
+
+    // Reverse the string
+    mov     x5, #0              // Start index
+    sub     x6, x4, #1          // End index
+int_to_ascii_reverse:
+    cmp     x5, x6
+    bhs     int_to_ascii_reverse_done
+    ldrb    w7, [x1, x5]
+    ldrb    w8, [x1, x6]
+    strb    w8, [x1, x5]
+    strb    w7, [x1, x6]
+    add     x5, x5, #1
+    sub     x6, x6, #1
+    b       int_to_ascii_reverse
+
+int_to_ascii_reverse_done:
+    mov     x2, #0
+    strb    w2, [x1, x4]
     ret
 
-.size main, .-main
+// Helper function to print string
+print_string:
+    mov     x8, #64             // sys_write
+    svc     #0
+    ret
 
 ASCIINEMA
 https://asciinema.org/a/688680

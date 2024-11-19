@@ -158,5 +158,5 @@ print_bit:
     zero_char: .ascii "0"
 
 ASCIINEMA
-https://asciinema.org/a/688635
+https://asciinema.org/a/690742
 

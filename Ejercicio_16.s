@@ -125,3 +125,6 @@ exit:
     mov     x0, #0              // return 0
     mov     x8, #93             // sys_exit
     svc     #0
+
+ASCIINEMA REC
+https://asciinema.org/a/690912

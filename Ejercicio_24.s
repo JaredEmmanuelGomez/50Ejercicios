@@ -25,132 +25,321 @@ def binary_search(arr, target):
 // Gómez Aguilar Jared Emmanuel
 // 22210309
 .data
-    input_size: .asciz "Enter array size: "
-    input_num: .asciz "Enter number %d: "
-    search_prompt: .asciz "Enter number to search: "
-    found_msg: .asciz "Number found at position %d\n"
-    not_found_msg: .asciz "Number not found\n"
-    scan_format: .asciz "%d"
-    print_format: .asciz "%d "
-    newline: .asciz "\n"
-
-.bss
-    .align 4
-    array: .skip 400    // Space for up to 100 integers
-    size: .skip 4       // Variable to store array size
-    target: .skip 4     // Number to search for
+    msgSize:    .ascii "Ingrese el tamaño del arreglo: "
+    lenSize = . - msgSize
+    msgInput:   .ascii "Ingrese el número "
+    lenInput = . - msgInput
+    msgColon:   .ascii ": "
+    lenColon = . - msgColon
+    msgSort:    .ascii "\nArreglo ordenado: "
+    lenSort = . - msgSort
+    msgBuscar:  .ascii "\nIngrese el número a buscar: "
+    lenBuscar = . - msgBuscar
+    msgEncontrado: .ascii "El número se encontró en la posición: "
+    lenEncontrado = . - msgEncontrado
+    msgNoEncontrado: .ascii "El número no se encontró en el arreglo\n"
+    lenNoEncontrado = . - msgNoEncontrado
+    msgComa:    .ascii ", "
+    lenComa = . - msgComa
+    buffer:     .skip 20        // Buffer para entrada
+    array:      .skip 800       // Espacio para 100 números (8 bytes cada uno)
+    newline:    .ascii "\n"
 
 .text
-.global main
-main:
-    // Save link register
-    str lr, [sp, -16]!
+.global _start
 
-    // Print prompt for array size
-    adrp x0, input_size
-    add x0, x0, :lo12:input_size
-    bl printf
+_start:
+    // Solicitar tamaño del arreglo
+    mov x0, #1
+    ldr x1, =msgSize
+    mov x2, lenSize
+    mov x8, #64
+    svc #0
 
-    // Read array size
-    adrp x0, scan_format
-    add x0, x0, :lo12:scan_format
-    adrp x1, size
-    add x1, x1, :lo12:size
-    bl scanf
+    // Leer tamaño
+    mov x0, #0
+    ldr x1, =buffer
+    mov x2, #20
+    mov x8, #63
+    svc #0
 
-    // Initialize counter for array input
-    mov w21, #0
+    // Convertir string a número
+    ldr x1, =buffer
+    bl string_to_number
+    mov x19, x0             // x19 = tamaño del arreglo
+
+    // Leer números del arreglo
+    mov x20, #0            // x20 = índice actual
+    ldr x21, =array        // x21 = dirección base del arreglo
 
 input_loop:
-    // Check if we've input all numbers
-    adrp x0, size
-    add x0, x0, :lo12:size
-    ldr w1, [x0]
-    cmp w21, w1
-    b.ge end_input
+    cmp x20, x19
+    beq input_done
 
-    // Print prompt for number
-    adrp x0, input_num
-    add x0, x0, :lo12:input_num
-    mov w1, w21
-    bl printf
+    // Mostrar "Ingrese el número X: "
+    mov x0, #1
+    ldr x1, =msgInput
+    mov x2, lenInput
+    mov x8, #64
+    svc #0
 
-    // Read number
-    adrp x0, scan_format
-    add x0, x0, :lo12:scan_format
-    adrp x1, array
-    add x1, x1, :lo12:array
-    add x1, x1, w21, lsl #2
-    bl scanf
+    mov x0, x20
+    add x0, x0, #1
+    ldr x1, =buffer
+    bl numero_a_string
+    
+    mov x0, #1
+    ldr x1, =buffer
+    mov x8, #64
+    svc #0
 
-    // Increment counter
-    add w21, w21, #1
+    mov x0, #1
+    ldr x1, =msgColon
+    mov x2, lenColon
+    mov x8, #64
+    svc #0
+
+    // Leer número
+    mov x0, #0
+    ldr x1, =buffer
+    mov x2, #20
+    mov x8, #63
+    svc #0
+
+    // Convertir y guardar
+    ldr x1, =buffer
+    bl string_to_number
+    str x0, [x21, x20, lsl #3]
+
+    add x20, x20, #1
     b input_loop
 
-end_input:
-    // Prompt for search number
-    adrp x0, search_prompt
-    add x0, x0, :lo12:search_prompt
-    bl printf
+input_done:
+    // Ordenar el arreglo (bubble sort)
+    ldr x0, =array
+    mov x1, x19
+    bl bubble_sort
 
-    // Read search number
-    adrp x0, scan_format
-    add x0, x0, :lo12:scan_format
-    adrp x1, target
-    add x1, x1, :lo12:target
-    bl scanf
+    // Mostrar arreglo ordenado
+    mov x0, #1
+    ldr x1, =msgSort
+    mov x2, lenSort
+    mov x8, #64
+    svc #0
 
-    // Binary search initialization
-    mov w21, #0          // left = 0
-    adrp x0, size
-    add x0, x0, :lo12:size
-    ldr w22, [x0]       // right = size-1
-    sub w22, w22, #1
+    // Mostrar elementos ordenados
+    mov x20, #0        // índice actual
+print_loop:
+    cmp x20, x19
+    beq print_done
+
+    ldr x0, [x21, x20, lsl #3]
+    ldr x1, =buffer
+    bl numero_a_string
+
+    mov x0, #1
+    ldr x1, =buffer
+    mov x8, #64
+    svc #0
+
+    // Mostrar coma si no es el último
+    add x22, x20, #1
+    cmp x22, x19
+    beq skip_comma
+    
+    mov x0, #1
+    ldr x1, =msgComa
+    mov x2, lenComa
+    mov x8, #64
+    svc #0
+
+skip_comma:
+    add x20, x20, #1
+    b print_loop
+
+print_done:
+    // Pedir número a buscar
+    mov x0, #1
+    ldr x1, =msgBuscar
+    mov x2, lenBuscar
+    mov x8, #64
+    svc #0
+
+    mov x0, #0
+    ldr x1, =buffer
+    mov x2, #20
+    mov x8, #63
+    svc #0
+
+    ldr x1, =buffer
+    bl string_to_number
+    mov x22, x0        // número a buscar
+
+    // Realizar búsqueda binaria
+    ldr x0, =array
+    mov x1, x19
+    mov x2, x22
+    bl binary_search
+    
+    // Verificar resultado
+    cmp x0, #-1
+    beq no_encontrado
+
+encontrado:
+    mov x19, x0
+    mov x0, #1
+    ldr x1, =msgEncontrado
+    mov x2, lenEncontrado
+    mov x8, #64
+    svc #0
+
+    mov x0, x19
+    ldr x1, =buffer
+    bl numero_a_string
+
+    mov x0, #1
+    ldr x1, =buffer
+    mov x8, #64
+    svc #0
+
+    mov x0, #1
+    ldr x1, =newline
+    mov x2, #1
+    mov x8, #64
+    svc #0
+    b salir
+
+no_encontrado:
+    mov x0, #1
+    ldr x1, =msgNoEncontrado
+    mov x2, lenNoEncontrado
+    mov x8, #64
+    svc #0
+
+salir:
+    mov x0, #0
+    mov x8, #93
+    svc #0
+
+bubble_sort:
+    // x0 = dirección base, x1 = tamaño
+    mov x2, #0          // i
+outer_loop:
+    sub x3, x1, #1
+    cmp x2, x3
+    bge sort_done
+
+    mov x3, #0          // j
+inner_loop:
+    sub x4, x1, x2
+    sub x4, x4, #1
+    cmp x3, x4
+    bge next_outer
+
+    ldr x5, [x0, x3, lsl #3]           // arr[j]
+    add x6, x3, #1
+    ldr x7, [x0, x6, lsl #3]           // arr[j+1]
+    cmp x5, x7
+    ble next_inner
+
+    // Intercambiar elementos
+    str x7, [x0, x3, lsl #3]
+    str x5, [x0, x6, lsl #3]
+
+next_inner:
+    add x3, x3, #1
+    b inner_loop
+
+next_outer:
+    add x2, x2, #1
+    b outer_loop
+
+sort_done:
+    ret
+
+binary_search:
+    // x0 = dirección base, x1 = tamaño, x2 = valor a buscar
+    mov x3, #0          // left = 0
+    sub x4, x1, #1      // right = size - 1
 
 search_loop:
-    // Check if search is complete
-    cmp w21, w22
-    b.gt not_found
+    cmp x3, x4
+    bgt not_found
 
-    // Calculate mid point
-    add w23, w21, w22
-    lsr w23, w23, #1    // mid = (left + right)/2
+    // mid = (left + right) / 2
+    add x5, x3, x4
+    lsr x5, x5, #1
 
-    // Load array[mid]
-    adrp x0, array
-    add x0, x0, :lo12:array
-    ldr w24, [x0, w23, sxtw #2]
+    // Cargar arr[mid]
+    ldr x6, [x0, x5, lsl #3]
 
-    // Load target
-    adrp x0, target
-    add x0, x0, :lo12:target
-    ldr w25, [x0]
-
-    // Compare
-    cmp w24, w25
-    b.eq found
-    b.lt search_greater
-    sub w22, w23, #1    // right = mid-1
+    // Comparar con valor buscado
+    cmp x6, x2
+    beq found
+    bgt search_right
+    
+    // Buscar en mitad izquierda
+    add x3, x5, #1
     b search_loop
 
-search_greater:
-    add w21, w23, #1    // left = mid+1
+search_right:
+    // Buscar en mitad derecha
+    sub x4, x5, #1
     b search_loop
 
 found:
-    adrp x0, found_msg
-    add x0, x0, :lo12:found_msg
-    mov w1, w23
-    bl printf
-    b exit
+    mov x0, x5          // Retornar índice
+    ret
 
 not_found:
-    adrp x0, not_found_msg
-    add x0, x0, :lo12:not_found_msg
-    bl printf
+    mov x0, #-1         // Retornar -1
+    ret
 
-exit:
-    // Restore link register and return
-    ldr lr, [sp], #16
-    mov w0, #0
+string_to_number:
+    mov x0, #0
+    mov x2, #10
+
+convert_loop:
+    ldrb w3, [x1], #1
+    cmp w3, #'\n'
+    beq convert_done
+    cmp w3, #0
+    beq convert_done
+    
+    sub w3, w3, #'0'
+    mul x0, x0, x2
+    add x0, x0, x3
+    b convert_loop
+
+convert_done:
+    ret
+
+numero_a_string:
+    mov x2, #10
+    mov x3, x1
+
+toString_loop:
+    udiv x4, x0, x2
+    msub x5, x4, x2, x0
+    add x5, x5, #'0'
+    strb w5, [x1], #1
+    mov x0, x4
+    cbnz x0, toString_loop
+
+    // Invertir string
+    mov x4, x3
+    sub x5, x1, #1
+
+reverse_loop:
+    cmp x4, x5
+    bge reverse_done
+    ldrb w6, [x4]
+    ldrb w7, [x5]
+    strb w7, [x4], #1
+    strb w6, [x5], #-1
+    b reverse_loop
+
+reverse_done:
+    sub x0, x1, x3
+    mov x2, x0
     ret

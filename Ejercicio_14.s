@@ -14,63 +14,77 @@ def decimal_a_hexadecimal(decimal):
 //Gómez Aguilar Jared Emmanuel
 //22210309
 .data
-    prompt:     .asciz "Enter a decimal number: "
-    outfmt:     .asciz "Hexadecimal: %s\n"
-    scanfmt:    .asciz "%ld"
-    number:     .quad 0
-    hexchars:   .asciz "0123456789ABCDEF"
-    buffer:     .skip 17            // Buffer for hex result (16 chars + null)
+    prompt:     .string "Enter a decimal number: "
+    prompt_len: .quad   . - prompt
+    buffer:     .skip   20
+    result:     .skip   17          // 16 chars + newline
+    hex_chars:  .string "0123456789ABCDEF"
+    newline:    .string "\n"
 
 .text
-    .global main
-    .align 2
+.global _start
 
-main:
-    stp     x29, x30, [sp, -16]!
-    mov     x29, sp
-
+_start:
     // Print prompt
-    adrp    x0, prompt
-    add     x0, x0, :lo12:prompt
-    bl      printf
+    mov     x0, #1              // stdout
+    adr     x1, prompt          // message to print
+    ldr     x2, =prompt_len     // message length
+    mov     x8, #64             // sys_write
+    svc     #0
 
     // Read input
-    adrp    x0, scanfmt
-    add     x0, x0, :lo12:scanfmt
-    adrp    x1, number
-    add     x1, x1, :lo12:number
-    bl      scanf
+    mov     x0, #0              // stdin
+    adr     x1, buffer          // buffer address
+    mov     x2, #20             // buffer size
+    mov     x8, #63             // sys_read
+    svc     #0
 
-    // Load number and prepare buffer
-    adrp    x19, number
-    add     x19, x19, :lo12:number
-    ldr     x19, [x19]            // Number to convert
-    
-    adrp    x20, buffer
-    add     x20, x20, :lo12:buffer
-    add     x20, x20, #16         // Go to end of buffer
-    mov     w21, #0
-    strb    w21, [x20]            // Null terminator
-    sub     x20, x20, #1
-
-    adrp    x23, hexchars
-    add     x23, x23, :lo12:hexchars
+    // Convert ASCII to integer
+    adr     x1, buffer          // buffer address
+    mov     x2, #0              // result
+    mov     x3, #10             // multiplier
 
 convert_loop:
-    and     x21, x19, #15         // Get least significant 4 bits
-    ldr     x22, [x23, x21]       // Load corresponding hex char
-    strb    w22, [x20], #-1       // Store char
-    lsr     x19, x19, #4          // Shift right by 4
-    cbnz    x19, convert_loop     // Continue if number not zero
+    ldrb    w4, [x1]           // load character
+    cmp     w4, #'\n'          // check for newline
+    beq     convert_done
+    sub     w4, w4, #'0'       // convert to number
+    mul     x2, x2, x3         // multiply by 10
+    add     x2, x2, x4         // add digit
+    add     x1, x1, #1         // next character
+    b       convert_loop
+
+convert_done:
+    // Convert to hex string
+    adr     x1, result         // result buffer
+    mov     x3, #15            // counter (16 nibbles - 1)
+    adr     x5, hex_chars      // hex characters table
+
+hex_loop:
+    mov     x6, x2             // copy number
+    lsr     x6, x6, x3, lsl #2 // shift right by counter * 4
+    and     x6, x6, #0xF       // mask last nibble
+    ldrb    w4, [x5, x6]       // load hex character
+    strb    w4, [x1]           // store character
+    add     x1, x1, #1         // next position
+    subs    x3, x3, #1         // decrease counter
+    bpl     hex_loop
+
+    // Add newline
+    mov     w4, #'\n'
+    strb    w4, [x1]
 
     // Print result
-    adrp    x0, outfmt
-    add     x0, x0, :lo12:outfmt
-    add     x1, x20, #1           // Point to start of string
-    bl      printf
+    mov     x0, #1             // stdout
+    adr     x1, result         // result buffer
+    mov     x2, #17            // length (16 + newline)
+    mov     x8, #64            // sys_write
+    svc     #0
 
-    mov     w0, #0
-    ldp     x29, x30, [sp], #16
-    ret
+exit:
+    mov     x0, #0             // return 0
+    mov     x8, #93            // sys_exit
+    svc     #0
 
-.size main, .-main
+ASCIINEMA REC
+
